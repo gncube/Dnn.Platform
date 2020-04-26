@@ -1,26 +1,7 @@
-#region Copyright
-
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -53,7 +34,6 @@ using DotNetNuke.Web.Api.Internal;
 using ContentDisposition = System.Net.Mime.ContentDisposition;
 using FileInfo = DotNetNuke.Services.FileSystem.FileInfo;
 using System.Web;
-using DotNetNuke.Entities.Tabs;
 
 namespace DotNetNuke.Web.InternalServices
 {
@@ -146,7 +126,7 @@ namespace DotNetNuke.Web.InternalServices
             // local references for use in closure
             var portalSettings = PortalSettings;
             var currentSynchronizationContext = SynchronizationContext.Current;
-            var userInfo = UserInfo;    
+            var userInfo = UserInfo;
             var task = request.Content.ReadAsMultipartAsync(provider)
                 .ContinueWith(o =>
                     {
@@ -253,7 +233,7 @@ namespace DotNetNuke.Web.InternalServices
             try
             {
                 var extension = Path.GetExtension(fileName).ValueOrEmpty().Replace(".", "");
-                if (!string.IsNullOrEmpty(filter) && !filter.ToLower().Contains(extension.ToLower()))
+                if (!string.IsNullOrEmpty(filter) && !filter.ToLowerInvariant().Contains(extension.ToLowerInvariant()))
                 {
                     errorMessage = GetLocalizedString("ExtensionNotAllowed");
                     return savedFileDto;
@@ -292,7 +272,7 @@ namespace DotNetNuke.Web.InternalServices
                 var contentType = FileContentTypeManager.Instance.GetContentType(Path.GetExtension(fileName));
                 var file = FileManager.Instance.AddFile(folderInfo, fileName, stream, true, false, contentType, userInfo.UserID);
 
-                if (extract && extension.ToLower() == "zip")
+                if (extract && extension.ToLowerInvariant() == "zip")
                 {
                     FileManager.Instance.UnzipFile(file);
                     FileManager.Instance.DeleteFile(file);
@@ -364,6 +344,7 @@ namespace DotNetNuke.Web.InternalServices
             public string Filter { get; set; }
             public bool IsHostMenu { get; set; }
             public int PortalId { get; set; } = -1;
+            public string ValidationCode { get; set; }
         }
 
         [DataContract]
@@ -409,30 +390,42 @@ namespace DotNetNuke.Web.InternalServices
                 string fileName,
                 bool overwrite,
                 bool isHostPortal,
-                bool extract)
+                bool extract,
+                string validationCode)
         {
             var result = new FileUploadDto();
             BinaryReader reader = null;
             Stream fileContent = null;
             try
             {
+                var extensionList = new List<string>();
+                if (!string.IsNullOrWhiteSpace(filter))
+                {
+                    extensionList = filter.Split(',').Select(i => i.Trim()).ToList();
+                }
+
+                var validateParams = new List<object>{ extensionList, portalId, userInfo.UserID};
+                if (!ValidationUtils.ValidationCodeMatched(validateParams, validationCode))
+                {
+                    throw new InvalidOperationException("Bad Request");
+                }
+
                 var extension = Path.GetExtension(fileName).ValueOrEmpty().Replace(".", "");
                 result.FileIconUrl = IconController.GetFileIconUrl(extension);
 
-                if (!string.IsNullOrEmpty(filter) && !filter.ToLower().Contains(extension.ToLower()))
+                if (!string.IsNullOrEmpty(filter) && !filter.ToLowerInvariant().Contains(extension.ToLowerInvariant()))
                 {
                     result.Message = GetLocalizedString("ExtensionNotAllowed");
                     return result;
                 }
 
                 var folderManager = FolderManager.Instance;
-
                 var effectivePortalId = isHostPortal ? Null.NullInteger : portalId;
-
-                // Check if this is a User Folder                
-                int userId;
                 var folderInfo = folderManager.GetFolder(effectivePortalId, folder);
-                if (IsUserFolder(folder, out userId))
+
+                int userId;
+
+                if (folderInfo == null && IsUserFolder(folder, out userId))
                 {
                     var user = UserController.GetUserById(effectivePortalId, userId);
                     if (user != null)
@@ -462,7 +455,7 @@ namespace DotNetNuke.Web.InternalServices
                     file = FileManager.Instance.AddFile(folderInfo, fileName, stream, true, false,
                                                         FileContentTypeManager.Instance.GetContentType(Path.GetExtension(fileName)),
                                                         userInfo.UserID);
-                    if (extract && extension.ToLower() == "zip")
+                    if (extract && extension.ToLowerInvariant() == "zip")
                     {
                         var destinationFolder = FolderManager.Instance.GetFolder(file.FolderId);
                         var invalidFiles = new List<string>();
@@ -505,7 +498,7 @@ namespace DotNetNuke.Web.InternalServices
                 result.Path = result.FileId > 0 ? path : string.Empty;
                 result.FileName = fileName;
 
-                if (extract && extension.ToLower() == "zip")
+                if (extract && extension.ToLowerInvariant() == "zip")
                 {
                     FileManager.Instance.DeleteFile(file);
                 }
@@ -577,6 +570,7 @@ namespace DotNetNuke.Web.InternalServices
                     var folder = string.Empty;
                     var filter = string.Empty;
                     var fileName = string.Empty;
+                    var validationCode = string.Empty;
                     var overwrite = false;
                     var isHostPortal = false;
                     var extract = false;
@@ -613,7 +607,9 @@ namespace DotNetNuke.Web.InternalServices
                                     int.TryParse(item.ReadAsStringAsync().Result, out portalId);
                                 }
                                 break;
-
+                            case "\"VALIDATIONCODE\"":
+                                validationCode = item.ReadAsStringAsync().Result ?? "";
+                                break;
                             case "\"POSTFILE\"":
                                 fileName = item.Headers.ContentDisposition.FileName.Replace("\"", "");
                                 if (fileName.IndexOf("\\", StringComparison.Ordinal) != -1)
@@ -634,7 +630,7 @@ namespace DotNetNuke.Web.InternalServices
                         currentSynchronizationContext.Send(
                             delegate
                             {
-                                result = UploadFile(stream, portalId, userInfo, folder, filter, fileName, overwrite, isHostPortal, extract);
+                                result = UploadFile(stream, portalId, userInfo, folder, filter, fileName, overwrite, isHostPortal, extract, validationCode);
                             },
                             null
                         );
@@ -701,7 +697,7 @@ namespace DotNetNuke.Web.InternalServices
                 }
 
                 result = UploadFile(responseStream, portalId, UserInfo, dto.Folder.ValueOrEmpty(), dto.Filter.ValueOrEmpty(),
-                    fileName, dto.Overwrite, dto.IsHostMenu, dto.Unzip);
+                    fileName, dto.Overwrite, dto.IsHostMenu, dto.Unzip, dto.ValidationCode);
 
                 /* Response Content Type cannot be application/json 
                     * because IE9 with iframe-transport manages the response 

@@ -1,24 +1,7 @@
-#region Copyright
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke� - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 #region Usings
 
 using System;
@@ -59,6 +42,10 @@ namespace DotNetNuke.Entities.Controllers
     public class HostController : ComponentBase<IHostController, HostController>, IHostController
     {
     	private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof (HostController));
+        
+        /// <summary>
+        /// Initializes a new instance of the HostController class
+        /// </summary>
         internal HostController()
         {
         }
@@ -102,7 +89,7 @@ namespace DotNetNuke.Entities.Controllers
                 }
                 else
                 {
-                    retValue = (setting.ToUpperInvariant().StartsWith("Y") || setting.ToUpperInvariant() == "TRUE");
+                    retValue = (setting.StartsWith("Y", StringComparison.InvariantCultureIgnoreCase) || setting.Equals("TRUE", StringComparison.InvariantCultureIgnoreCase));
                 }
             }
             catch (Exception exc)
@@ -205,7 +192,7 @@ namespace DotNetNuke.Entities.Controllers
         /// </summary>
         /// <param name="key">the host setting to read</param>
         /// <param name="passPhrase">the pass phrase used for encryption/decryption</param>
-        /// <returns></returns>
+        /// <returns>The setting value as a <see cref="string"/></returns>
         public string GetEncryptedString(string key, string passPhrase)
         {
             Requires.NotNullOrEmpty("key", key);
@@ -272,7 +259,7 @@ namespace DotNetNuke.Entities.Controllers
 		/// Updates the specified config.
 		/// </summary>
 		/// <param name="config">The config.</param>
-		/// <param name="clearCache">if set to <c>true</c> will clear cache after update the setting.</param>
+		/// <param name="clearCache">if set to <c>true</c> will clear cache after updating the setting.</param>
         public void Update(ConfigurationSetting config, bool clearCache)
         {
             try
@@ -328,7 +315,7 @@ namespace DotNetNuke.Entities.Controllers
         }
 
 		/// <summary>
-		/// Updates the specified key.
+		/// Updates the setting for a specified key.
 		/// </summary>
 		/// <param name="key">The key.</param>
 		/// <param name="value">The value.</param>
@@ -338,7 +325,7 @@ namespace DotNetNuke.Entities.Controllers
         }
 
         /// <summary>
-        /// takes in a text value, encrypts it with a FIPS compliant algorithm and stores
+        /// Takes in a <see cref="string"/> value, encrypts it with a FIPS compliant algorithm and stores it.
         /// </summary>
         /// <param name="key">host settings key</param>
         /// <param name="value">host settings value</param>
@@ -352,8 +339,10 @@ namespace DotNetNuke.Entities.Controllers
             Update(key, cipherText);
         }
 
-
-
+        /// <summary>
+        /// Increments the Client Resource Manager (CRM) version to bust local cache
+        /// </summary>
+        /// <param name="includeOverridingPortals">If true also forces a CRM version increment on portals that have non-default settings for CRM</param>
         public void IncrementCrmVersion(bool includeOverridingPortals)
         {
             var currentVersion = Host.Host.CrmVersion;
@@ -368,6 +357,10 @@ namespace DotNetNuke.Entities.Controllers
 
         #endregion
 
+        /// <summary>
+        /// Gets all settings from the databse
+        /// </summary>
+        /// <returns><see cref="Dictionary"/>&lt;<see cref="string"/>, <see cref="ConfigurationSetting"/>&gt;</returns>
         private static Dictionary<string, ConfigurationSetting> GetSettingsFromDatabase()
         {
             var dicSettings = new Dictionary<string, ConfigurationSetting>();

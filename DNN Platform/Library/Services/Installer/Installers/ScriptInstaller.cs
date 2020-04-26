@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -201,7 +185,7 @@ namespace DotNetNuke.Services.Installer.Installers
 
         private bool IsValidScript(string fileExtension)
         {
-            return ProviderConfiguration.DefaultProvider.ToLower() == fileExtension.ToLower() || fileExtension.ToLower() == "sql";
+            return ProviderConfiguration.DefaultProvider.Equals(fileExtension, StringComparison.InvariantCultureIgnoreCase) || fileExtension.Equals("sql", StringComparison.InvariantCultureIgnoreCase);
         }
 		
 		#endregion
@@ -214,7 +198,7 @@ namespace DotNetNuke.Services.Installer.Installers
             bool bSuccess = InstallFile(scriptFile);
 
             //Process the file if it is an Install Script
-            var extension = Path.GetExtension(scriptFile.Name.ToLower());
+            var extension = Path.GetExtension(scriptFile.Name.ToLowerInvariant());
             if (extension != null)
             {
                 string fileExtension = extension.Substring(1);
@@ -250,16 +234,16 @@ namespace DotNetNuke.Services.Installer.Installers
             string type = nav.GetAttribute("type", "");
             if (file != null && IsCorrectType(file.Type))
             {
-                if (file.Name.ToLower().StartsWith("install."))
+                if (file.Name.StartsWith("install.", StringComparison.InvariantCultureIgnoreCase))
                 {
 					//This is the initial script when installing
                     _installScript = file;
                 }
-                else if (file.Name.ToLower().StartsWith("upgrade."))
+                else if (file.Name.StartsWith("upgrade.", StringComparison.InvariantCultureIgnoreCase))
                 {
                     _upgradeScript = file;
                 }
-                else if (type.ToLower() == "install")
+                else if (type.Equals("install", StringComparison.InvariantCultureIgnoreCase))
                 {
 					//These are the Install/Upgrade scripts
                     InstallScripts[file.Version] = file;
@@ -278,11 +262,11 @@ namespace DotNetNuke.Services.Installer.Installers
         protected override void UnInstallFile(InstallFile scriptFile)
         {
 			//Process the file if it is an UnInstall Script
-            var extension = Path.GetExtension(scriptFile.Name.ToLower());
+            var extension = Path.GetExtension(scriptFile.Name.ToLowerInvariant());
             if (extension != null && (UnInstallScripts.ContainsValue(scriptFile) ))
             {
                 string fileExtension = extension.Substring(1);
-                if (scriptFile.Name.ToLower().StartsWith("uninstall.") && IsValidScript(fileExtension))
+                if (scriptFile.Name.StartsWith("uninstall.", StringComparison.InvariantCultureIgnoreCase) && IsValidScript(fileExtension))
                 {
 					//Install Script
                     Log.AddInfo(Util.SQL_Executing + scriptFile.Name);

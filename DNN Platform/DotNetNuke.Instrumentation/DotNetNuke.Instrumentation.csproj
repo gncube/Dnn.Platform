@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DotNetNuke.Instrumentation</RootNamespace>
     <AssemblyName>DotNetNuke.Instrumentation</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -24,7 +24,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\DotNetNuke.Instrumentation.xml</DocumentationFile>
     <NoWarn>1591, 0649</NoWarn>
-    <LangVersion>6</LangVersion>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,6 +35,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\DotNetNuke.Instrumentation.xml</DocumentationFile>
     <NoWarn>1591, 0649</NoWarn>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DotNetNuke.log4net">
@@ -59,12 +60,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <RootDirectory>$(MSBuildProjectDirectory)\..\..</RootDirectory>
+  </PropertyGroup>
+  <Import Project="..\..\DNN_Platform.build" />
   <Target Name="AfterBuild" DependsOnTargets="DebugProject">
   </Target>
   <Target Name="DebugProject">
-    <Copy SourceFiles="bin\DotNetNuke.Log4Net.dll" DestinationFolder="..\..\Website\bin\" />
-    <Copy SourceFiles="bin\DotNetNuke.Instrumentation.dll" DestinationFolder="..\..\Website\bin" />
-    <Copy SourceFiles="bin\DotNetNuke.Instrumentation.pdb" DestinationFolder="..\..\Website\bin" />
-    <Copy SourceFiles="bin\DotNetNuke.Instrumentation.xml" DestinationFolder="..\..\Website\bin" />
+    <Copy SourceFiles="bin\DotNetNuke.Log4Net.dll" DestinationFolder="$(WebsitePath)\bin\" />
+    <Copy SourceFiles="bin\DotNetNuke.Instrumentation.dll" DestinationFolder="$(WebsitePath)\bin" />
+    <Copy SourceFiles="bin\DotNetNuke.Instrumentation.pdb" DestinationFolder="$(WebsitePath)\bin" />
+    <Copy SourceFiles="bin\DotNetNuke.Instrumentation.xml" DestinationFolder="$(WebsitePath)\bin" />
   </Target>
 </Project>

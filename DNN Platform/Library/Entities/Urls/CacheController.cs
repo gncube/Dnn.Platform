@@ -1,26 +1,7 @@
-﻿#region Copyright
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 #region Usings
 
 using System;
@@ -63,7 +44,7 @@ namespace DotNetNuke.Entities.Urls
         private const string FriendlyUrlSettingsKey = "url_FriendlyUrlSettings";
         private const string RedirectActionsKey = "url_ParameterRedirectActions_{0}";
         private const string RewriteActionsKey = "url_ParameterRewriteActions_{0}";
-        private const string PortalAliasRegexesKey = "url_PortalAliasRegex";
+        private const string PortalAliasesKey = "url_PortalAliases";
         private const string UserProfileActionsKey = "url_UserProfileActions";
         private const string PortalModuleProvidersForTabKey = "url_ModuleProvidersForTab_{0}_{1}";
         private const string PortalModuleProvidersAllTabsKey = "url_ModuleProvidersAllTabs_{0}";
@@ -433,9 +414,9 @@ namespace DotNetNuke.Entities.Urls
             return rewriteActions;
         }
 
-        internal static OrderedDictionary GetPortalAliasesRegexesFromCache()
+        internal static OrderedDictionary GetPortalAliasesFromCache()
         {
-            object raw = DataCache.GetCache(PortalAliasRegexesKey);
+            object raw = DataCache.GetCache(PortalAliasesKey);
             return (raw != null) ? (OrderedDictionary)raw : null;
         }
 
@@ -760,9 +741,9 @@ namespace DotNetNuke.Entities.Urls
             SetPortalCache(PortalAliasListKey, aliases, settings);
         }
 
-        internal static void StorePortalAliasesRegexesInCache(OrderedDictionary regexList, FriendlyUrlSettings settings)
+        internal static void StorePortalAliasesInCache(OrderedDictionary aliasList, FriendlyUrlSettings settings)
         {
-            SetPortalCache(PortalAliasRegexesKey, regexList, settings);
+            SetPortalCache(PortalAliasesKey, aliasList, settings);
         }
 
         internal void StoreTabPathsInCache(int portalId, SharedDictionary<string, string> tabPathDictionary, FriendlyUrlSettings settings)
@@ -791,7 +772,7 @@ namespace DotNetNuke.Entities.Urls
             DataCache.RemoveCache(UrlPortalsKey);
             DataCache.RemoveCache(UserProfileActionsKey);
             DataCache.RemoveCache(PortalAliasListKey);
-            DataCache.RemoveCache(PortalAliasRegexesKey);
+            DataCache.RemoveCache(PortalAliasesKey);
             DataCache.RemoveCache(TabPathsKey);
         }
 

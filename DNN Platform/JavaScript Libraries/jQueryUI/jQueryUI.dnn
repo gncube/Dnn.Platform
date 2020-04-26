@@ -6,9 +6,9 @@
       <iconFile>Icons\Sigma\Extensions_32x32_Standard.png</iconFile>
       <owner>
         <name>DNN</name>
-        <organization>DNN Corp.</organization>
-        <url>http://www.dnnsoftware.com</url>
-        <email>support@dnnsoftware.com</email>
+        <organization>.NET Foundation</organization>
+        <url>https://dnncommunity.org</url>
+        <email>info@dnncommunity.org</email>
       </owner>
       <license src="jQuery UI (MIT).txt" />
       <releaseNotes src="releaseNotes.txt" />
@@ -31,17 +31,9 @@
               <name>jquery-ui.js</name>
             </jsfile>
           </jsfiles>
-        </component>
-        <component type="File">
-          <files>
-            <basePath>Licenses</basePath>
-            <file>
-              <name>jQuery UI (MIT).txt</name>
-            </file>
-          </files>
-        </component>
-        <component type="Cleanup" version="01.10.03" fileName ="01.10.03.txt" />
-        <component type="Cleanup" version="01.11.03" fileName ="01.11.03.txt" />
+        </component>        
+        <component type="Cleanup" version="01.10.03" fileName="01.10.03.txt" />
+        <component type="Cleanup" version="01.11.03" fileName="01.11.03.txt" />
       </components>
     </package>
   </packages>

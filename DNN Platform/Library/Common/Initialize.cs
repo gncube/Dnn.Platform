@@ -1,24 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 #region Usings
 
 using System;
@@ -150,59 +133,29 @@ namespace DotNetNuke.Common
 
         private static Version GetNETFrameworkVersion()
         {
-            string version = Environment.Version.ToString(2);
-            if (version == "2.0")
+            //Obtain the .NET Framework version, 9.4.0 and later requires .NET 4.7.2 or later
+            var version = Environment.Version.ToString(2);
+
+            //If unknown version return as is.
+            if (version != "4.0")
+                return new Version(version);
+
+            //Otherwise utilize release DWORD from registry to determine version
+            //Reference List: https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/versions-and-dependencies
+            var release = GetDotNet4ReleaseNumberFromRegistry();
+            if (release >= 528040)
             {
-                //Try and load a 3.0 Assembly
-                try
-                {
-                    AppDomain.CurrentDomain.Load("System.Runtime.Serialization, Version=3.0.0.0, Culture=neutral, PublicKeyToken=B77A5C561934E089");
-                    version = "3.0";
-                }
-                catch (Exception exc)
-                {
-                    Logger.Error(exc);
-                }
-                //Try and load a 3.5 Assembly
-                try
-                {
-                    AppDomain.CurrentDomain.Load("System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=B77A5C561934E089");
-                    version = "3.5";
-                }
-                catch (Exception exc)
-                {
-                    Logger.Error(exc);
-                }
+                version = "4.8";
             }
-            else if (version == "4.0")
+            else
             {
-                var release = GetReleaseFromRegistry();
-                if (release >= 394254)
-                {
-                    version = "4.6.1";
-                }
-                else if (release >= 393295)
-                {
-                    version = "4.6";
-                }
-                else if (release >= 379893)
-                {
-                    version = "4.5.2";
-                }
-                else if (release >= 378675)
-                {
-                    version = "4.5.1";
-                }
-                else if (release >= 378389)
-                {
-                    version = "4.5";
-                }
+                version = "4.7.2";
             }
 
             return new Version(version);
         }
 
-        private static int GetReleaseFromRegistry()
+        private static int GetDotNet4ReleaseNumberFromRegistry()
         {
             try
             {
@@ -281,7 +234,7 @@ namespace DotNetNuke.Common
 
         private static bool IsUpgradeOrInstallRequest(HttpRequest request)
         {
-            var url = request.Url.LocalPath.ToLower();
+            var url = request.Url.LocalPath.ToLowerInvariant();
 
             return url.EndsWith("/install.aspx")
                 || url.Contains("/upgradewizard.aspx")
@@ -443,7 +396,7 @@ namespace DotNetNuke.Common
         /// -----------------------------------------------------------------------------
         public static bool ProcessHttpModule(HttpRequest request, bool allowUnknownExtensions, bool checkOmitFromRewriteProcessing)
         {
-            var toLowerLocalPath = request.Url.LocalPath.ToLower();
+            var toLowerLocalPath = request.Url.LocalPath.ToLowerInvariant();
 
             if (toLowerLocalPath.EndsWith("webresource.axd")
                     || toLowerLocalPath.EndsWith("scriptresource.axd")

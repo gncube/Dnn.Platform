@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -30,10 +14,12 @@ using System.Web.Security;
 using DotNetNuke.Application;
 using DotNetNuke.Common;
 using DotNetNuke.Common.Utilities;
+using DotNetNuke.Entities.Controllers;
 using DotNetNuke.Entities.Host;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Users;
 using DotNetNuke.HttpModules.Services;
+using DotNetNuke.Instrumentation;
 using DotNetNuke.Security;
 using DotNetNuke.Security.Roles;
 using DotNetNuke.Services.Localization;
@@ -52,6 +38,8 @@ namespace DotNetNuke.HttpModules.Membership
     /// </summary>
     public class MembershipModule : IHttpModule
     {
+        private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof(MembershipModule));
+
         private static readonly Regex NameRegex = new Regex(@"\w+[\\]+(?=)", RegexOptions.Compiled);
 
         private static string _cultureCode;
@@ -184,9 +172,7 @@ namespace DotNetNuke.HttpModules.Membership
                 }
 
                 //authenticate user and set last login ( this is necessary for users who have a permanent Auth cookie set ) 
-                if (user == null || user.IsDeleted || user.Membership.LockedOut
-                    || (!user.Membership.Approved && !user.IsInRole("Unverified Users"))
-                    || user.Username.ToLower() != context.User.Identity.Name.ToLower())
+                if (RequireLogout(context, user))
                 {
                     var portalSecurity = PortalSecurity.Instance;
                     portalSecurity.SignOut();
@@ -254,6 +240,34 @@ namespace DotNetNuke.HttpModules.Membership
             if (context.Items["UserInfo"] == null)
             {
                 context.Items.Add("UserInfo", new UserInfo());
+            }
+        }
+
+        private static bool RequireLogout(HttpContextBase context, UserInfo user)
+        {
+            try
+            {
+                if (user == null || user.IsDeleted || user.Membership.LockedOut
+                    || !user.Membership.Approved && !user.IsInRole("Unverified Users")
+                    || !user.Username.Equals(context.User.Identity.Name, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return true;
+                }
+
+                var forceLogout = HostController.Instance.GetBoolean("ForceLogoutAfterPasswordChanged");
+                if (!forceLogout)
+                {
+                    return false;
+                }
+
+                // if user's password changed after the user cookie created, then force user to login again.
+                var issueDate = ((FormsIdentity)context.User.Identity)?.Ticket.IssueDate;
+                return !Null.IsNull(issueDate) && issueDate < user.Membership.LastPasswordChangeDate;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+                return true;
             }
         }
     }

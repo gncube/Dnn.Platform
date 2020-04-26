@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -478,7 +462,7 @@ namespace DotNetNuke.UI.UserControls
                         else
                         {
                             string mCustomUrl = txtUrl.Text;
-                            if (mCustomUrl.ToLower() == "http://")
+                            if (mCustomUrl.Equals("http://", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 r = "";
                             }
@@ -676,7 +660,7 @@ namespace DotNetNuke.UI.UserControls
                 ViewState["UrlType"] = _Urltype;
                 if (_Urltype == "F")
                 {
-                    if (_Url.ToLower().StartsWith("fileid="))
+                    if (_Url.StartsWith("fileid=", StringComparison.InvariantCultureIgnoreCase))
                     {
                         TrackingUrl = _Url;
                         var objFile = FileManager.Instance.GetFile(int.Parse(_Url.Substring(7)));
@@ -705,7 +689,7 @@ namespace DotNetNuke.UI.UserControls
                 }
                 if (_Urltype == "M")
                 {
-                    if (_Url.ToLower().StartsWith("userid="))
+                    if (_Url.StartsWith("userid=", StringComparison.InvariantCultureIgnoreCase))
                     {
                         UserInfo objUser = UserController.GetUserById(_objPortal.PortalID, int.Parse(_Url.Substring(7)));
                         if (objUser != null)
@@ -938,10 +922,10 @@ namespace DotNetNuke.UI.UserControls
                         foreach (string strImage in Directory.GetFiles(strImagesFolder))
                         {
                             string img = strImage.Replace(strImagesFolder, "").Trim('/').Trim('\\');
-                            cboImages.Items.Add(new ListItem(img, string.Format("~/{0}/{1}", PortalSettings.DefaultIconLocation, img).ToLower()));
+                            cboImages.Items.Add(new ListItem(img, string.Format("~/{0}/{1}", PortalSettings.DefaultIconLocation, img).ToLowerInvariant()));
                         }
 
-                        ListItem selecteItem = cboImages.Items.FindByValue(_Url.ToLower());
+                        ListItem selecteItem = cboImages.Items.FindByValue(_Url.ToLowerInvariant());
                         if (selecteItem != null)
                         {
                             selecteItem.Selected = true;
@@ -1350,7 +1334,7 @@ namespace DotNetNuke.UI.UserControls
             ParentFolderName += cboFolders.SelectedItem.Value;
 
             string strExtension = Path.GetExtension(txtFile.PostedFile.FileName).Replace(".", "");
-            if (!String.IsNullOrEmpty(FileFilter) && ("," + FileFilter.ToLower()).IndexOf("," + strExtension.ToLower()) == -1)
+            if (!String.IsNullOrEmpty(FileFilter) && ("," + FileFilter.ToLowerInvariant()).IndexOf("," + strExtension.ToLowerInvariant()) == -1)
             {
                 //trying to upload a file not allowed for current filter
                 lblMessage.Text = string.Format(Localization.GetString("UploadError", LocalResourceFile), FileFilter, strExtension);

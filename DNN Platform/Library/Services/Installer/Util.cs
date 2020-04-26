@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -68,6 +52,7 @@ namespace DotNetNuke.Services.Installer
         public static string AUTHENTICATION_UnRegistered = GetLocalizedString("AUTHENTICATION_UnRegistered");
         public static string CLEANUP_Processing = GetLocalizedString("CLEANUP_Processing");
         public static string CLEANUP_ProcessComplete = GetLocalizedString("CLEANUP_ProcessComplete");
+        public static string CLEANUP_ProcessError = GetLocalizedString("CLEANUP_ProcessError");
         public static string COMPONENT_Installed = GetLocalizedString("COMPONENT_Installed");
         public static string COMPONENT_Skipped = GetLocalizedString("COMPONENT_Skipped");
         public static string COMPONENT_RolledBack = GetLocalizedString("COMPONENT_RolledBack");
@@ -89,15 +74,16 @@ namespace DotNetNuke.Services.Installer
         public static string EVENTMESSAGE_CommandMissing = GetLocalizedString("EVENTMESSAGE_CommandMissing");
         public static string EVENTMESSAGE_TypeMissing = GetLocalizedString("EVENTMESSAGE_TypeMissing");
         public static string EXCEPTION = GetLocalizedString("EXCEPTION");
-        public static string EXCEPTION_NameMissing = GetLocalizedString("EXCEPTION_NameMissing");
-        public static string EXCEPTION_TypeMissing = GetLocalizedString("EXCEPTION_TypeMissing");
-        public static string EXCEPTION_VersionMissing = GetLocalizedString("EXCEPTION_VersionMissing");
         public static string EXCEPTION_FileLoad = GetLocalizedString("EXCEPTION_FileLoad");
         public static string EXCEPTION_FileRead = GetLocalizedString("EXCEPTION_FileRead");
+        public static string EXCEPTION_GlobDotDotNotSupportedInCleanup = GetLocalizedString("EXCEPTION_GlobDotDotNotSupportedInCleanup");
         public static string EXCEPTION_InstallerCreate = GetLocalizedString("EXCEPTION_InstallerCreate");
         public static string EXCEPTION_MissingDnn = GetLocalizedString("EXCEPTION_MissingDnn");
         public static string EXCEPTION_MultipleDnn = GetLocalizedString("EXCEPTION_MultipleDnn");
+        public static string EXCEPTION_NameMissing = GetLocalizedString("EXCEPTION_NameMissing");
         public static string EXCEPTION_Type = GetLocalizedString("EXCEPTION_Type");
+        public static string EXCEPTION_TypeMissing = GetLocalizedString("EXCEPTION_TypeMissing");
+        public static string EXCEPTION_VersionMissing = GetLocalizedString("EXCEPTION_VersionMissing");
         public static string FILE_CreateBackup = GetLocalizedString("FILE_CreateBackup");
         public static string FILE_Created = GetLocalizedString("FILE_Created");
         public static string FILE_Deleted = GetLocalizedString("FILE_Deleted");
@@ -574,15 +560,12 @@ namespace DotNetNuke.Services.Installer
         /// <param name="destFileName">The Destination file</param>
         public static void WriteStream(Stream sourceStream, string destFileName)
         {
-            //Delete the file
-            FileSystemUtils.DeleteFile(destFileName);
-
             var file = new FileInfo(destFileName);
             if (file.Directory != null && !file.Directory.Exists)
                 file.Directory.Create();
 
-            TryToCreateAndExecute(destFileName, (f) => StreamToStream(sourceStream, f), 1000);
-
+            //HACK: Temporary fix, upping retry limit due to locking for existing filesystem access.  This "fixes" azure, but isn't the most elegant
+            TryToCreateAndExecute(destFileName, (f) => StreamToStream(sourceStream, f), 3500);
         }
 
         /// <summary>
@@ -594,18 +577,16 @@ namespace DotNetNuke.Services.Installer
         /// <returns>true if action occur and false otherwise</returns>
         public static bool TryToCreateAndExecute(string path, Action<FileStream> action, int milliSecondMax = Timeout.Infinite)
         {
-            bool result = false;
-            DateTime dateTimestart = DateTime.Now;
+            var result = false;
+            var dateTimeStart = DateTime.Now;
             Tuple < AutoResetEvent, FileSystemWatcher > tuple = null;
 
             while (true)
             {
                 try
                 {
-                    using (var file = File.Open(path,
-                        FileMode.Create,
-                        FileAccess.ReadWrite,
-                        FileShare.Write))
+                    //Open for create, requesting read/write access, allow others to read/write as well
+                    using (var file = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
                     {
                         action(file);
                         result = true;
@@ -639,7 +620,7 @@ namespace DotNetNuke.Services.Installer
                     int milliSecond = Timeout.Infinite;
                     if (milliSecondMax != Timeout.Infinite)
                     {
-                        milliSecond = (int) (DateTime.Now - dateTimestart).TotalMilliseconds;
+                        milliSecond = (int) (DateTime.Now - dateTimeStart).TotalMilliseconds;
                         if (milliSecond >= milliSecondMax)
                         {
                             result = false;
@@ -780,9 +761,6 @@ namespace DotNetNuke.Services.Installer
 
                     // Write the data to the local file
                     localStream.Write(buffer, 0, bytesRead);
-
-                    // Increment total bytes processed
-                    //TODO fix this line bytesProcessed += bytesRead;
                 } while (bytesRead > 0);
             }
             finally

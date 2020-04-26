@@ -1,24 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 #region Usings
 
 using System;
@@ -84,12 +67,12 @@ namespace DotNetNuke.Entities.Portals
             string strPortalAlias;
 
             //try the specified alias first
-            PortalAliasInfo portalAlias = GetPortalAliasLookupInternal(httpAlias.ToLower());
+            PortalAliasInfo portalAlias = GetPortalAliasLookupInternal(httpAlias.ToLowerInvariant());
 
             //domain.com and www.domain.com should be synonymous
             if (portalAlias == null)
             {
-                if (httpAlias.ToLower().StartsWith("www."))
+                if (httpAlias.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase))
                 {
                     //try alias without the "www." prefix
                     strPortalAlias = httpAlias.Replace("www.", "");
@@ -99,7 +82,7 @@ namespace DotNetNuke.Entities.Portals
                     strPortalAlias = string.Concat("www.", httpAlias);
                 }
                 //perform the lookup
-                portalAlias = GetPortalAliasLookupInternal(strPortalAlias.ToLower());
+                portalAlias = GetPortalAliasLookupInternal(strPortalAlias.ToLowerInvariant());
             }
             //allow domain wildcards 
             if (portalAlias == null)
@@ -114,13 +97,13 @@ namespace DotNetNuke.Entities.Portals
                     strPortalAlias = httpAlias;
                 }
                 //try an explicit lookup using the wildcard entry ( ie. *.domain.com )
-                portalAlias = GetPortalAliasLookupInternal("*." + strPortalAlias.ToLower()) ??
-                              GetPortalAliasLookupInternal(strPortalAlias.ToLower());
+                portalAlias = GetPortalAliasLookupInternal("*." + strPortalAlias.ToLowerInvariant()) ??
+                              GetPortalAliasLookupInternal(strPortalAlias.ToLowerInvariant());
 
                 if (portalAlias == null)
                 {
                     //try a lookup using "www." + raw domain
-                    portalAlias = GetPortalAliasLookupInternal("www." + strPortalAlias.ToLower());
+                    portalAlias = GetPortalAliasLookupInternal("www." + strPortalAlias.ToLowerInvariant());
                 }
             }
             if (portalAlias == null)
@@ -131,7 +114,7 @@ namespace DotNetNuke.Entities.Portals
                 if (portalAliases.Keys.Count == 0 || (portalAliases.Count == 1 && portalAliases.ContainsKey("_default")))
                 {
                     //relate the PortalAlias to the default portal on a fresh database installation
-                    DataProvider.Instance().UpdatePortalAlias(httpAlias.ToLower().Trim('/'), UserController.Instance.GetCurrentUserInfo().UserID);
+                    DataProvider.Instance().UpdatePortalAlias(httpAlias.ToLowerInvariant().Trim('/'), UserController.Instance.GetCurrentUserInfo().UserID);
                     EventLogController.Instance.AddLog("PortalAlias",
                                        httpAlias,
                                        PortalController.Instance.GetCurrentPortalSettings(),
@@ -141,7 +124,7 @@ namespace DotNetNuke.Entities.Portals
                     //clear the cachekey "GetPortalByAlias" otherwise portalalias "_default" stays in cache after first install
                     DataCache.RemoveCache("GetPortalByAlias");
                     //try again
-                    portalAlias = GetPortalAliasLookupInternal(httpAlias.ToLower());
+                    portalAlias = GetPortalAliasLookupInternal(httpAlias.ToLowerInvariant());
                 }
             }
             return portalAlias;
@@ -179,7 +162,7 @@ namespace DotNetNuke.Entities.Portals
             //Add Alias
             var dataProvider = DataProvider.Instance();
             int Id = dataProvider.AddPortalAlias(portalAlias.PortalID,
-                                                 portalAlias.HTTPAlias.ToLower().Trim('/'),
+                                                 portalAlias.HTTPAlias.ToLowerInvariant().Trim('/'),
                                                  portalAlias.CultureCode,
                                                  portalAlias.Skin,
                                                  portalAlias.BrowserType.ToString(),
@@ -278,7 +261,7 @@ namespace DotNetNuke.Entities.Portals
             //Update Alias
             DataProvider.Instance().UpdatePortalAliasInfo(portalAlias.PortalAliasID,
                                                             portalAlias.PortalID,
-                                                            portalAlias.HTTPAlias.ToLower().Trim('/'),
+                                                            portalAlias.HTTPAlias.ToLowerInvariant().Trim('/'),
                                                             portalAlias.CultureCode,
                                                             portalAlias.Skin,
                                                             portalAlias.BrowserType.ToString(),
@@ -327,14 +310,14 @@ namespace DotNetNuke.Entities.Portals
                     // StartsWith because child portals are redirected to the parent portal domain name
                     // eg. child = 'www.domain.com/child' and parent is 'www.domain.com'
                     // this allows the parent domain name to resolve to the child alias ( the tabid still identifies the child portalid )
-                    string httpAlias = currentAlias.Value.HTTPAlias.ToLower();
-                    if (httpAlias.StartsWith(portalAlias.ToLower()) && currentAlias.Value.PortalID == portalId)
+                    string httpAlias = currentAlias.Value.HTTPAlias.ToLowerInvariant();
+                    if (httpAlias.StartsWith(portalAlias.ToLowerInvariant()) && currentAlias.Value.PortalID == portalId)
                     {
                         retValue = currentAlias.Value.HTTPAlias;
                         break;
                     }
                     httpAlias = httpAlias.StartsWith("www.") ? httpAlias.Replace("www.", "") : string.Concat("www.", httpAlias);
-                    if (httpAlias.StartsWith(portalAlias.ToLower()) && currentAlias.Value.PortalID == portalId)
+                    if (httpAlias.StartsWith(portalAlias.ToLowerInvariant()) && currentAlias.Value.PortalID == portalId)
                     {
                         retValue = currentAlias.Value.HTTPAlias;
                         break;

@@ -1,23 +1,7 @@
-﻿#region Copyright
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 #region Usings
 using System;
 
@@ -45,10 +29,22 @@ namespace DotNetNuke.Common.Utilities
         /// Gets the database time.
         /// </summary>
         /// <returns>Date/time of the database in UTC</returns>
-        [Obsolete("Deprecated in DNN 9.1.0.  Replaced by GetDatabaseUtcTime")]
+        [Obsolete("Deprecated in DNN 9.1.0.  Replaced by GetDatabaseUtcTime. Scheduled removal in v11.0.0.")]
         public static DateTime GetDatabaseTime()
         {
             return GetDatabaseUtcTime();
+        }
+
+        /// <summary>
+        /// Gets DateTime Offset of current DB 
+        /// </summary>
+        /// <returns>DateTimeOffset object</returns>
+        public static TimeZoneInfo GetDatabaseDateTimeOffset()
+        {
+            var dateTimeOffset = DataProvider.Instance().GetDatabaseTimeOffset();
+            var offset = dateTimeOffset.Offset;
+            var id = string.Format("UTC {0}", offset.ToString());
+            return TimeZoneInfo.CreateCustomTimeZone(id, offset, id, id);
         }
 
         /// <summary>

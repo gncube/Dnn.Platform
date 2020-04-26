@@ -1,26 +1,7 @@
-﻿#region Copyright
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 #region Usings
 
 using System;
@@ -785,7 +766,7 @@ namespace DotNetNuke.Entities.Urls
                                             bool isDeleted)
         {
             //remove leading '/' and convert to lower for all keys 
-            string tabPathSimple = tabPath.Replace("//", "/").ToLower();
+            string tabPathSimple = tabPath.Replace("//", "/").ToLowerInvariant();
             //the tabpath depth is only set if it's higher than the running highest tab path depth
             int thisTabPathDepth = tabPathSimple.Length - tabPathSimple.Replace("/", "").Length;
             if (thisTabPathDepth > tabPathDepth)
@@ -798,10 +779,10 @@ namespace DotNetNuke.Entities.Urls
             }
 
             //Contruct the tab key for the dictionary. Using :: allows for separation of portal alias and tab path. 
-            string tabKey = (httpAlias + "::" + tabPathSimple).ToLower();
+            string tabKey = (httpAlias + "::" + tabPathSimple).ToLowerInvariant();
 
             //construct the duplicate key check
-            string dupKey = (httpAlias + "/" + tabPathSimple).ToLower();
+            string dupKey = (httpAlias + "/" + tabPathSimple).ToLowerInvariant();
             if (dupKey[dupKey.Length - 1] != '/')
             {
                 dupKey += "/";
@@ -936,7 +917,7 @@ namespace DotNetNuke.Entities.Urls
             }
         }
 
-        private static OrderedDictionary BuildPortalAliasesRegexDictionary()
+        private static OrderedDictionary BuildPortalAliasesDictionary()
         {
            var aliases = PortalAliasController.Instance.GetPortalAliases();
             //create a new OrderedDictionary.  We use this because we
@@ -944,20 +925,16 @@ namespace DotNetNuke.Entities.Urls
             //portalAlias that matches, and we want to preserve the
             //order of the items, such that the item with the most path separators (/)
             //is at the front of the list.  
-            var regexList = new OrderedDictionary(aliases.Count);
-            //this regex pattern, when formatted with the httpAlias, will match a request 
-            //for this portalAlias
-            const string aliasRegexPattern = @"(?:^(?<http>http[s]{0,1}://){0,1})(?:(?<alias>_ALIAS_)(?<path>$|\?[\w]*|/[\w]*))";
+            var aliasList = new OrderedDictionary(aliases.Count);
             var pathLengths = new List<int>();
             foreach (string aliasKey in aliases.Keys)
             {
                 PortalAliasInfo alias = aliases[aliasKey];
                 //regex escape the portal alias for inclusion into a regex pattern
                 string plainAlias = alias.HTTPAlias;
-                string escapedAlias = Regex.Escape(plainAlias);
-                var aliasesToAdd = new List<string> { escapedAlias };
+                var aliasesToAdd = new List<string> { plainAlias };
                 //check for existence of www. version of domain, if it doesn't have a www.
-                if (plainAlias.ToLower().StartsWith("www."))
+                if (plainAlias.StartsWith("www.", StringComparison.InvariantCultureIgnoreCase))
                 {
                     if (plainAlias.Length > 4)
                     {
@@ -965,7 +942,7 @@ namespace DotNetNuke.Entities.Urls
                         if (!aliases.Contains(noWWWVersion))
                         {
                             //there is no no-www version of the alias
-                            aliasesToAdd.Add(Regex.Escape(noWWWVersion));
+                            aliasesToAdd.Add(noWWWVersion);
                         }
                     }
                 }
@@ -974,7 +951,7 @@ namespace DotNetNuke.Entities.Urls
                     string wwwVersion = "www." + plainAlias;
                     if (!aliases.Contains(wwwVersion))
                     {
-                        aliasesToAdd.Add(Regex.Escape(wwwVersion));
+                        aliasesToAdd.Add(wwwVersion);
                     }
                 }
                 int count = 0;
@@ -984,8 +961,6 @@ namespace DotNetNuke.Entities.Urls
                     count++;
                     var aliasObject = new PortalAliasInfo(alias) { Redirect = count != 1 };
 
-                    //format up the regex pattern by replacing the alias portion with the portal alias name
-                    string regexPattern = aliasRegexPattern.Replace("_ALIAS_", aliasToAdd);
                     //work out how many path separators there are in the portalAlias (ie myalias/mychild = 1 path)
                     int pathLength = plainAlias.Split('/').GetUpperBound(0);
                     //now work out where in the list we should put this portalAlias regex pattern
@@ -1008,18 +983,18 @@ namespace DotNetNuke.Entities.Urls
                     if (pathLengths.Count > 0 && insertPoint <= pathLengths.Count - 1)
                     {
                         //put the new regex pattern into the correct position
-                        regexList.Insert(insertPoint, regexPattern, aliasObject);
+                        aliasList.Insert(insertPoint, aliasToAdd, aliasObject);
                         pathLengths.Insert(insertPoint, pathLength);
                     }
                     else
                     {
                         //put the new regex pattern on the end of the list
-                        regexList.Add(regexPattern, aliasObject);
+                        aliasList.Add(aliasToAdd, aliasObject);
                         pathLengths.Add(pathLength);
                     }
                 }
             }
-            return regexList;
+            return aliasList;
         }
 
         private static SharedDictionary<string, string> BuildTabDictionary(out PathSizes pathSizes,
@@ -1356,7 +1331,7 @@ namespace DotNetNuke.Entities.Urls
 
             if (tab.CustomAliases.ContainsKey(currentCulture))
             {
-                customHttpAlias = tab.CustomAliases[currentCulture].ToLower();
+                customHttpAlias = tab.CustomAliases[currentCulture].ToLowerInvariant();
             }
             customAliasUsed = httpAliases.Contains(customHttpAlias);
             //if there is a custom alias for this tab, and it's not one of the ones in the alias list, put it in 
@@ -1392,8 +1367,28 @@ namespace DotNetNuke.Entities.Urls
             return rewritePath;
         }
 
+        /// <summary>
+        /// Returns whether the portal specified exists in the Tab index or not.
+        /// </summary>
+        /// <param name="portalDepths">The current portalDepths dictionary.</param>
+        /// <param name="portalId">The id of the portal to search for.</param>
+        /// <returns></returns>
+        private static bool PortalExistsInIndex(SharedDictionary<int, PathSizes> portalDepths, int portalId)
+        {
+            bool result = false;    
+
+            if (portalDepths != null)
+            {
+                using (portalDepths.GetReadLock())
+                {
+                    result = portalDepths.ContainsKey(portalId);
+                }
+            }
+            return result;
+        }
+
         /// <summary> 
-        /// Gets the Tab Dictionary from the DataCache memory location, if it's empty or missing, builds a new one 
+        /// Gets the Tab Dictionary from the DataCache memory location, if it's empty or missing, builds a new one. 
         /// </summary>
         /// <param name="portalId"></param>
         /// <param name="minTabPathDepth">ByRef parameter to return the minimum tab path depth (the number of '/' in the tab path)</param> 
@@ -1421,48 +1416,50 @@ namespace DotNetNuke.Entities.Urls
                                                                                 bool bypassCache,
                                                                                 Guid parentTraceId)
         {
-            SharedDictionary<int, PathSizes> portalDepths;
-            SharedDictionary<string, string> dict;
-
-            //place threadlock to prevent two threads getting a null object
-            //check for the tab dictionary in the DataCache
-            var cc = new CacheController();
-            cc.GetPageIndexFromCache(out dict, out portalDepths, settings);
-
+            PathSizes depthInfo;
+            SharedDictionary<int, PathSizes> portalDepths = null; 
+            SharedDictionary<string, string> dict = null;
+            SharedDictionary<string, string> portalTabPathDictionary = null;
             string reason = "";
-            if (dict == null)
+
+            var cc = new CacheController();
+            if (bypassCache == false)
             {
-                reason += "No Page index in cache;";
-            }
-            if (forceRebuild)
-            {
-                reason += "Force Rebuild;";
-            }
-            if (bypassCache)
-            {
-                reason += "Bypass Cache;";
-            }
-            if (dict != null)
-            {
-                using (dict.GetReadLock())
-                {
-                    reason += "Existing Page Index=" + dict.Count.ToString() + " items;";
-                }
+                cc.GetPageIndexFromCache(out dict, out portalDepths, settings);
+                portalTabPathDictionary = FetchTabPathDictionary(portalId);
             }
 
-            Hashtable homePageSkins; //keeps a list of skins set per home page and culture
-            SharedDictionary<string, string> portalTabPathDictionary;
-            if (dict != null && portalDepths != null && forceRebuild == false && bypassCache == false)
+            if (dict == null || portalDepths == null || portalTabPathDictionary == null || !PortalExistsInIndex(portalDepths, portalId) || forceRebuild)
             {
-                PathSizes depthInfo;
-                bool changed = false;
-                using (portalDepths.GetWriteLock())
+                //place threadlock to prevent two threads getting a null object. Use the same lock object that is used to 
+                lock (tabPathDictBuildLock)
                 {
-                    if (!portalDepths.ContainsKey(portalId))
+                    //check for the tab dictionary in the DataCache again as it could have been cached by another thread 
+                    //while waiting for the lock to become available.
+                    if (bypassCache == false)
                     {
-                        reason += "Portal " + portalId.ToString() + " added to index;";
+                        cc.GetPageIndexFromCache(out dict, out portalDepths, settings);
+                        portalTabPathDictionary = FetchTabPathDictionary(portalId);
+                    }
 
-                        //tab dictionary built, but portal not in it
+                    if (dict == null || portalDepths == null || portalTabPathDictionary == null || !PortalExistsInIndex(portalDepths, portalId) || forceRebuild)
+                    {
+                        Hashtable homePageSkins; //keeps a list of skins set per home page and culture
+
+                        if (!bypassCache && dict == null)
+                        {
+                            reason += "No Page index in cache;";
+                        }
+                        if (forceRebuild)
+                        {
+                            reason += "Force Rebuild;";
+                        }
+                        if (bypassCache)
+                        {
+                            reason += "Bypass Cache;";
+                        }
+                        //PathSizes depthInfo;
+                        //the cached dictionary was null or forceRebuild = true or bypassCache = true, so go get a new dictionary
                         dict = BuildTabDictionary(out depthInfo,
                                                     settings,
                                                     portalId,
@@ -1471,72 +1468,55 @@ namespace DotNetNuke.Entities.Urls
                                                     out portalTabPathDictionary,
                                                     parentTraceId);
 
-                        //recheck portal add, when running with locks can get duplicate key exceptions
-                        if (portalDepths.ContainsKey(portalId) == false)
+                        if (portalDepths == null || forceRebuild)
                         {
-                            portalDepths.Add(portalId, depthInfo);
-                            changed = true;
+                            portalDepths = new SharedDictionary<int, PathSizes>();
                         }
 
-                        cc.StoreTabPathsInCache(portalId, portalTabPathDictionary, settings);
-                        CacheController.StoreHomePageSkinsInCache(portalId, homePageSkins);
-                    }
-                    else
-                    {
-                        depthInfo = portalDepths[portalId];
-                    }
-                }
-                if (changed)
-                {
-                    //restash dictionary
-                    cc.StorePageIndexInCache(dict, portalDepths, settings, reason);
-                }
+                        //store the fact that this portal has been built
+                        using (portalDepths.GetWriteLock())
+                        {
+                            //depthInfo may already exist in index so use indexer to Add/Update rather than using Add method which
+                            //would throw an exception if the portal already existed in the dictionary.
+                            portalDepths[portalId] = depthInfo;
+                        }
 
-                if (depthInfo != null)
+                        if (bypassCache == false) //only cache if bypass not switched on
+                        {
+                            reason += "Portal " + portalId + " added to index;";
+                            using (dict.GetReadLock())
+                            {
+                                reason += "Existing Page Index=" + dict.Count + " items;";
+                            }
+
+                            cc.StorePageIndexInCache(dict, portalDepths, settings, reason);
+                            cc.StoreTabPathsInCache(portalId, portalTabPathDictionary, settings);
+                            CacheController.StoreHomePageSkinsInCache(portalId, homePageSkins);
+                        }
+                    }
+                }
+            }
+
+            if (PortalExistsInIndex(portalDepths, portalId))
+            {
+                using (portalDepths.GetReadLock())
                 {
+                    depthInfo = portalDepths[portalId];
                     minTabPathDepth = depthInfo.MinTabPathDepth;
                     maxTabPathDepth = depthInfo.MaxTabPathDepth;
                     minAliasPathDepth = depthInfo.MinAliasDepth;
                     maxAliasPathDepth = depthInfo.MaxAliasDepth;
                 }
-                else
-                {
-                    //fallback values, should never get here: mainly for compiler wranings
-                    minTabPathDepth = 1;
-                    maxTabPathDepth = 10;
-                    minAliasPathDepth = 1;
-                    maxAliasPathDepth = 4;
-                }
             }
             else
             {
-                //the cached dictionary was null or forceRebuild = true or bypassCache = true, so go get a new dictionary
-                PathSizes depthInfo;
-                dict = BuildTabDictionary(out depthInfo,
-                                            settings,
-                                            portalId,
-                                            null,
-                                            out homePageSkins,
-                                            out portalTabPathDictionary,
-                                            parentTraceId);
-
-                //store the fact that this portal has been built
-                portalDepths = new SharedDictionary<int, PathSizes>();
-                using (portalDepths.GetWriteLock())
-                {
-                    portalDepths.Add(portalId, depthInfo);
-                }
-                if (bypassCache == false) //only cache if bypass not switched on
-                {
-                    cc.StorePageIndexInCache(dict, portalDepths, settings, reason);
-                }
-                cc.StoreTabPathsInCache(portalId, portalTabPathDictionary, settings);
-                CacheController.StoreHomePageSkinsInCache(portalId, homePageSkins);
-                minTabPathDepth = depthInfo.MinTabPathDepth;
-                maxTabPathDepth = depthInfo.MaxTabPathDepth;
-                minAliasPathDepth = depthInfo.MinAliasDepth;
-                maxAliasPathDepth = depthInfo.MaxAliasDepth;
+                //fallback values, should never get here: mainly for compiler wranings
+                minTabPathDepth = 1;
+                maxTabPathDepth = 10;
+                minAliasPathDepth = 1;
+                maxAliasPathDepth = 4;
             }
+
             return dict;
         }
 
@@ -1573,7 +1553,7 @@ namespace DotNetNuke.Entities.Urls
             bool foundAlias = false;
 
             //Do a specified PortalAlias check first
-            PortalAliasInfo portalAliasInfo = portalAliasCollection.SingleOrDefault(a => a.HTTPAlias == portalAlias.ToLower());
+            PortalAliasInfo portalAliasInfo = portalAliasCollection.SingleOrDefault(a => a.HTTPAlias == portalAlias.ToLowerInvariant());
             if (portalAliasInfo != null)
             {
                 if (portalAliasInfo.PortalID == portalId)
@@ -1606,14 +1586,14 @@ namespace DotNetNuke.Entities.Urls
                     portalAliasInfo = portalAliasCollection.SingleOrDefault(a => a.HTTPAlias == currentAlias);
                     if (portalAliasInfo != null)
                     {
-                        string httpAlias = portalAliasInfo.HTTPAlias.ToLower();
-                        if (httpAlias.StartsWith(portalAlias.ToLower()) && portalAliasInfo.PortalID == portalId)
+                        string httpAlias = portalAliasInfo.HTTPAlias.ToLowerInvariant();
+                        if (httpAlias.StartsWith(portalAlias.ToLowerInvariant()) && portalAliasInfo.PortalID == portalId)
                         {
                             retValue = portalAliasInfo;
                             break;
                         }
                         httpAlias = httpAlias.StartsWith("www.") ? httpAlias.Replace("www.", "") : string.Concat("www.", httpAlias);
-                        if (httpAlias.StartsWith(portalAlias.ToLower()) && portalAliasInfo.PortalID == portalId)
+                        if (httpAlias.StartsWith(portalAlias.ToLowerInvariant()) && portalAliasInfo.PortalID == portalId)
                         {
                             retValue = portalAliasInfo;
                             break;
@@ -1628,16 +1608,16 @@ namespace DotNetNuke.Entities.Urls
         /// Returns an ordered dictionary of alias regex patterns.  These patterns are used to identify a portal alias by getting a match.
         /// </summary>
         /// <returns></returns>
-        internal static OrderedDictionary GetPortalAliasRegexes(FriendlyUrlSettings settings)
+        internal static OrderedDictionary GetPortalAliases(FriendlyUrlSettings settings)
         {
             //object to return
-            OrderedDictionary regexList = CacheController.GetPortalAliasesRegexesFromCache();
-            if (regexList == null)
+            OrderedDictionary aliasList = CacheController.GetPortalAliasesFromCache();
+            if (aliasList == null)
             {
-                regexList = BuildPortalAliasesRegexDictionary();
-                CacheController.StorePortalAliasesRegexesInCache(regexList, settings);
+                aliasList = BuildPortalAliasesDictionary();
+                CacheController.StorePortalAliasesInCache(aliasList, settings);
             }
-            return regexList;
+            return aliasList;
         }
 
         /// <summary>

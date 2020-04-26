@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -394,7 +398,7 @@ namespace log4net.Util
 		/// will be set per AppDomain.
 		/// </para>
 		/// </remarks>
-        [Obsolete("Use ProcessStartTimeUtc and convert to local time if needed.")]
+        [Obsolete("Use ProcessStartTimeUtc and convert to local time if needed.. Scheduled removal in v10.0.0.")]
 		public static DateTime ProcessStartTime
 		{
 			get { return s_processStartTimeUtc.ToLocalTime(); }

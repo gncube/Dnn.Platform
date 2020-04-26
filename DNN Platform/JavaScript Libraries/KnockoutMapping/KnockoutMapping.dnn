@@ -7,9 +7,9 @@
       <iconFile>Icons\Sigma\Extensions_32x32_Standard.png</iconFile>
       <owner>
         <name>DNN</name>
-        <organization>DNN Corp.</organization>
-        <url>http://www.dnnsoftware.com</url>
-        <email>support@dnnsoftware.com</email>
+        <organization>.NET Foundation</organization>
+        <url>https://dnncommunity.org</url>
+        <email>info@dnncommunity.org</email>
       </owner>
       <license src="Knockout Mapping (MIT).txt" />
       <releaseNotes src="releaseNotes.txt" />
@@ -33,16 +33,8 @@
               <name>knockout.mapping.js</name>
             </jsfile>
           </jsfiles>
-        </component>
-        <component type="File">
-          <files>
-            <basePath>Licenses</basePath>
-            <file>
-              <name>Knockout Mapping (MIT).txt</name>
-            </file>
-          </files>
-        </component>
-        <component type="Cleanup" version="02.04.01" fileName ="02.04.01.txt" />
+        </component>       
+        <component type="Cleanup" version="02.04.01" fileName="02.04.01.txt" />
       </components>
     </package>
   </packages>

@@ -1,26 +1,7 @@
-#region Copyright
-
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -116,7 +97,12 @@ namespace DotNetNuke.Services.Journal
 
         private void DeleteJournalItem(int portalId, int currentUserId, int journalId, bool softDelete)
         {
-            var ji = GetJournalItem(portalId, currentUserId, journalId);
+            var ji = GetJournalItem(portalId, currentUserId, journalId, !softDelete);
+            if (ji == null)
+            {
+                return;
+            }
+
             var groupId = ji.SocialGroupId;
 
             if (softDelete)
@@ -189,7 +175,7 @@ namespace DotNetNuke.Services.Journal
 
         private bool IsImageFile(string fileName)
         {
-            return (Globals.glbImageFileTypes + ",").IndexOf(Path.GetExtension(fileName).ToLower().Replace(".", "") + ",") > -1;        
+            return (Globals.glbImageFileTypes + ",").IndexOf(Path.GetExtension(fileName).Replace(".", "") + ",", StringComparison.InvariantCultureIgnoreCase) > -1;        
         }
 
         private bool ThumbnailCallback()
@@ -763,13 +749,13 @@ namespace DotNetNuke.Services.Journal
 
         #region Obsolete Methods
 
-        [Obsolete("Deprecated in DNN 7.2.2. Use SaveJournalItem(JournalItem, ModuleInfo)")]
+        [Obsolete("Deprecated in DNN 7.2.2. Use SaveJournalItem(JournalItem, ModuleInfo). Scheduled removal in v10.0.0.")]
         public void SaveJournalItem(JournalItem journalItem, int tabId)
         {
             SaveJournalItem(journalItem, tabId, Null.NullInteger);
         }
 
-        [Obsolete("Deprecated in DNN 7.2.2. Use UpdateJournalItem(JournalItem, ModuleInfo)")]
+        [Obsolete("Deprecated in DNN 7.2.2. Use UpdateJournalItem(JournalItem, ModuleInfo). Scheduled removal in v10.0.0.")]
         public void UpdateJournalItem(JournalItem journalItem, int tabId)
         {
             UpdateJournalItem(journalItem, tabId, Null.NullInteger);

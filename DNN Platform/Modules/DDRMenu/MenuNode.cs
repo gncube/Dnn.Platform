@@ -1,4 +1,8 @@
-﻿using System;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
@@ -169,6 +173,15 @@ namespace DotNetNuke.Web.DDRMenu
 
             return null;
         }
+
+        internal void RemoveAll(List<MenuNode> filteredNodes)
+        {
+            this.Children.RemoveAll(filteredNodes.Contains);
+            foreach (var child in Children)
+            {
+                child.RemoveAll(filteredNodes);
+            }
+        }        
 
         public bool HasChildren()
         {

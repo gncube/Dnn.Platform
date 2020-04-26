@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -109,7 +113,7 @@ namespace log4net.Appender
 		/// See <see cref="M:LoggingEvent.FixVolatileData(bool)"/> for more information.
 		/// </para>
 		/// </remarks>
-		[Obsolete("Use Fix property")]
+		[Obsolete("Use Fix property. Scheduled removal in v10.0.0.")]
 		virtual public bool OnlyFixPartialEventData
 		{
 			get { return (Fix == FixFlags.Partial); }

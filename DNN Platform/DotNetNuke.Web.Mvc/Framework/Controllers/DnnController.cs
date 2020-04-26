@@ -1,6 +1,7 @@
-﻿// Copyright (c) DNN Software. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Text;
 using System.Web.Mvc;
@@ -54,6 +55,11 @@ namespace DotNetNuke.Web.Mvc.Framework.Controllers
         public PortalSettings PortalSettings
         {
             get { return (ModuleContext == null) ? null : ModuleContext.PortalSettings; }
+        }
+
+        protected override RedirectToRouteResult RedirectToAction(string actionName, string controllerName, RouteValueDictionary routeValues)
+        {
+            return new DnnRedirecttoRouteResult(actionName, controllerName, string.Empty, routeValues, false, Url);
         }
 
         protected internal RedirectToRouteResult RedirectToDefaultRoute()

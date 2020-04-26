@@ -1,40 +1,42 @@
-﻿// DotNetNuke® - http://www.dnnsoftware.com
-// Copyright (c) 2002-2018
-// by DNN Corporation
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
 using System.Web.UI;
 using DotNetNuke.Entities.Modules;
+using DotNetNuke.Services.Localization;
 using DotNetNuke.UI.Modules;
 
 namespace DotNetNuke.Web.Mvc
 {
-    public class MvcModuleControlFactory : IModuleControlFactory
+    public class MvcModuleControlFactory : BaseModuleControlFactory
     {
-        public Control CreateControl(TemplateControl containerControl, string controlKey, string controlSrc)
+        public override Control CreateControl(TemplateControl containerControl, string controlKey, string controlSrc)
         {
             return new MvcHostControl(controlKey);
         }
 
-        public Control CreateModuleControl(TemplateControl containerControl, ModuleInfo moduleConfiguration)
+        public override Control CreateModuleControl(TemplateControl containerControl, ModuleInfo moduleConfiguration)
         {
             return new MvcHostControl();
         }
 
-        public Control CreateSettingsControl(TemplateControl containerControl, ModuleInfo moduleConfiguration, string controlSrc)
+        public override ModuleControlBase CreateModuleControl(ModuleInfo moduleConfiguration)
+        {
+            ModuleControlBase moduleControl = base.CreateModuleControl(moduleConfiguration);
+
+            var segments = moduleConfiguration.ModuleControl.ControlSrc.Replace(".mvc", "").Split('/');
+
+            moduleControl.LocalResourceFile = string.Format("~/DesktopModules/MVC/{0}/{1}/{2}.resx",
+                               moduleConfiguration.DesktopModule.FolderName,
+                               Localization.LocalResourceDirectory,
+                               segments[0]);
+
+            return moduleControl;
+
+        }
+
+        public override Control CreateSettingsControl(TemplateControl containerControl, ModuleInfo moduleConfiguration, string controlSrc)
         {
             return new MvcSettingsControl();
         }

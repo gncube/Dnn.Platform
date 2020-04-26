@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/3mts88xl9t34ytel?svg=true)](https://ci.appveyor.com/project/DnnAutomation/dnn-platform)
+[![Build status](https://dotnet.visualstudio.com/DNN/_apis/build/status/DNN%20%5BCI%5D?branchName=develop)](https://dotnet.visualstudio.com/DNN/_build/latest?definitionId=27&branchName=develop)
 
 ![DNN Platform At A Glance](dnnplatform.png)
 
@@ -12,7 +12,7 @@ In addition to robust content management, the free, open source DNN Platform inc
 
 * Single installation with multi-site capability
 * File and folder management
-* Static and dynamic Localization - 6 languages out-of-the-box (English, Ducth, French, German, Italian, and Spanish)
+* Static and dynamic Localization - 6 languages out-of-the-box (English, Dutch, French, German, Italian, and Spanish)
 * Customized web site templates and themes
 * Cloud-ready with MS Azure compatibility
 * 100's of REST API for site and content managment
@@ -24,7 +24,11 @@ In addition to robust content management, the free, open source DNN Platform inc
 
 ## Quick Links
 
-* [Contribute](http://www.dnnsoftware.com/wiki/page/github)
+* [Contribute](CONTRIBUTING.md)
+* [Build](.github/BUILD.md)
+* [Pull Request Procedures](.github/PULL_REQUEST_PROCESS.md)
+* [Versioning Policy](.github/VERSIONING_POLICY.md)
+* [Release Schedule](.github/RELEASE_SCHEDULE.md)
 * [DNN Digest](http://www.dnnsoftware.com/community/participate/subscribe-to-dnn-digest)
 * [Questions & Answers](http://answers.dnnsoftware.com/)
 * [Showcase](http://www.dnnsoftware.com/community/participate/community-showcase)
@@ -39,10 +43,17 @@ In addition to robust content management, the free, open source DNN Platform inc
 ## How to Contribute
 
 We encourage everyone to contribute.
-All the details on contributing with Git and on our working methods can be found on [our Git wiki page] (http://www.dnnsoftware.com/wiki/page/github)
+All the details on contributing with Git and on our working methods can be found on the [Contribute Page](CONTRIBUTING.md)
 
 In addition, since DNN is part of the .NET Foundation, we require our contributors to abide by their [Code of Conduct](https://www.dotnetfoundation.org/code-of-conduct) rules and requirements also.
+
+Pull requests are reviewed and accepted by the Approvers Group. Read more about the process and this group here: [Approvers](.github/APPROVERS.md)
 
 ## .NET Foundation
 
 This project is supported by the [.NET Foundation](https://dotnetfoundation.org).
+
+## NDepend
+
+We monitor code quality of the DNN Platform using [NDepend](https://www.ndepend.com).
+![NDepend](.github/images/PoweredByNDepend.png)

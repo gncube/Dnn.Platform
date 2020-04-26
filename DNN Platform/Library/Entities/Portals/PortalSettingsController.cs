@@ -1,26 +1,7 @@
-﻿#region Copyright
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -217,6 +198,8 @@ namespace DotNetNuke.Entities.Portals
             portalSettings.SearchTabId = portal.SearchTabId;
             portalSettings.ErrorPage404 = portal.Custom404TabId;
             portalSettings.ErrorPage500 = portal.Custom500TabId;
+            portalSettings.TermsTabId = portal.TermsTabId;
+            portalSettings.PrivacyTabId = portal.PrivacyTabId;
             portalSettings.DefaultLanguage = Null.IsNull(portal.DefaultLanguage) ? Localization.SystemLocale : portal.DefaultLanguage;
             portalSettings.HomeDirectory = Globals.ApplicationPath + "/" + portal.HomeDirectory + "/";
             portalSettings.HomeDirectoryMapPath = portal.HomeDirectoryMapPath;
@@ -243,7 +226,7 @@ namespace DotNetNuke.Entities.Portals
             }
             else
             {
-                crmVersion = HostController.Instance.GetInteger("CrmVersion");
+                crmVersion = settings.GetValueOrDefault("CrmVersion", HostController.Instance.GetInteger("CrmVersion"));
             }
             
             portalSettings.AllowUserUICulture = settings.GetValueOrDefault("AllowUserUICulture", false);
@@ -253,6 +236,7 @@ namespace DotNetNuke.Entities.Portals
             portalSettings.DefaultAdminSkin = settings.GetValueOrDefault("DefaultAdminSkin", Host.Host.DefaultAdminSkin);
             portalSettings.DefaultIconLocation = settings.GetValueOrDefault("DefaultIconLocation", "icons/sigma");
             portalSettings.DefaultModuleId = settings.GetValueOrDefault("defaultmoduleid", Null.NullInteger);
+            portalSettings.DefaultModuleActionMenu = settings.GetValueOrDefault("DefaultModuleActionMenu", "~/admin/Menus/ModuleActions/ModuleActions.ascx");
             portalSettings.DefaultPortalContainer = settings.GetValueOrDefault("DefaultPortalContainer", Host.Host.DefaultPortalContainer);
             portalSettings.DefaultPortalSkin = settings.GetValueOrDefault("DefaultPortalSkin", Host.Host.DefaultPortalSkin);
             portalSettings.DefaultTabId = settings.GetValueOrDefault("defaulttabid", Null.NullInteger);
@@ -261,6 +245,8 @@ namespace DotNetNuke.Entities.Portals
             portalSettings.EnablePopUps = settings.GetValueOrDefault("EnablePopUps", true);
             portalSettings.HideLoginControl = settings.GetValueOrDefault("HideLoginControl", false);
             portalSettings.EnableSkinWidgets = settings.GetValueOrDefault("EnableSkinWidgets", true);
+            portalSettings.ShowCookieConsent = settings.GetValueOrDefault("ShowCookieConsent", false);
+            portalSettings.CookieMoreLink = settings.GetValueOrDefault("CookieMoreLink", Null.NullString);
             portalSettings.EnableUrlLanguage = settings.GetValueOrDefault("EnableUrlLanguage", Host.Host.EnableUrlLanguage);
             portalSettings.HideFoldersEnabled = settings.GetValueOrDefault("HideFoldersEnabled", true);
             portalSettings.InlineEditorEnabled = settings.GetValueOrDefault("InlineEditorEnabled", true);
@@ -280,20 +266,20 @@ namespace DotNetNuke.Entities.Portals
 
             portalSettings.ControlPanelSecurity = PortalSettings.ControlPanelPermission.ModuleEditor;
             string setting = settings.GetValueOrDefault("ControlPanelSecurity", "");
-            if (setting.ToUpperInvariant() == "TAB")
+            if (setting.Equals("TAB", StringComparison.InvariantCultureIgnoreCase))
             {
                 portalSettings.ControlPanelSecurity = PortalSettings.ControlPanelPermission.TabEditor;
             }
 
             portalSettings.DefaultControlPanelMode = PortalSettings.Mode.View;
             setting = settings.GetValueOrDefault("ControlPanelMode", "");
-            if (setting.ToUpperInvariant() == "EDIT")
+            if (setting.Equals("EDIT", StringComparison.InvariantCultureIgnoreCase))
             {
                 portalSettings.DefaultControlPanelMode = PortalSettings.Mode.Edit;
             }
 
             setting = settings.GetValueOrDefault("ControlPanelVisibility", "");
-            portalSettings.DefaultControlPanelVisibility = setting.ToUpperInvariant() != "MIN";
+            portalSettings.DefaultControlPanelVisibility = !setting.Equals("MIN", StringComparison.InvariantCultureIgnoreCase);
 
             setting = settings.GetValueOrDefault("TimeZone", "");
             if (!string.IsNullOrEmpty(setting))
@@ -302,6 +288,24 @@ namespace DotNetNuke.Entities.Portals
                 if (timeZone != null)
                     portalSettings.TimeZone = timeZone;
             }
+
+            setting = settings.GetValueOrDefault("DataConsentActive", "False");
+            portalSettings.DataConsentActive = bool.Parse(setting);
+            setting = settings.GetValueOrDefault("DataConsentTermsLastChange", "");
+            if (!string.IsNullOrEmpty(setting))
+            {
+                portalSettings.DataConsentTermsLastChange = DateTime.Parse(setting, System.Globalization.CultureInfo.InvariantCulture);
+            }
+            setting = settings.GetValueOrDefault("DataConsentConsentRedirect", "-1");
+            portalSettings.DataConsentConsentRedirect = int.Parse(setting);
+            setting = settings.GetValueOrDefault("DataConsentUserDeleteAction", "0");
+            portalSettings.DataConsentUserDeleteAction = (PortalSettings.UserDeleteAction)int.Parse(setting);
+            setting = settings.GetValueOrDefault("DataConsentDelay", "1");
+            portalSettings.DataConsentDelay = int.Parse(setting);
+            setting = settings.GetValueOrDefault("DataConsentDelayMeasurement", "d");
+            portalSettings.DataConsentDelayMeasurement = setting;
+            setting = settings.GetValueOrDefault("AllowedExtensionsWhitelist", HostController.Instance.GetString("DefaultEndUserExtensionWhitelist"));
+            portalSettings.AllowedExtensionsWhitelist = new FileExtensionWhitelist(setting);
         }
 
         protected virtual void UpdateSkinSettings(TabInfo activeTab, PortalSettings portalSettings)

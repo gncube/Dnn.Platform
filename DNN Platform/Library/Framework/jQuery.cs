@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -77,7 +61,7 @@ namespace DotNetNuke.Framework
         /// <value></value>
         /// <returns></returns>
         /// <remarks>This is a simple wrapper around the Host.jQueryUrl property</remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string HostedUrl
         {
             get
@@ -97,7 +81,7 @@ namespace DotNetNuke.Framework
 		/// <value></value>
 		/// <returns></returns>
 		/// <remarks>This is a simple wrapper around the Host.jQueryUrl property</remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string HostedMigrateUrl
 		{
 			get
@@ -117,7 +101,7 @@ namespace DotNetNuke.Framework
         /// <value></value>
         /// <returns></returns>
         /// <remarks>This is a simple wrapper around the Host.jQueryUIUrl property</remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string HostedUIUrl
         {
             get
@@ -138,7 +122,7 @@ namespace DotNetNuke.Framework
         /// This property checks for both the minified version and the full uncompressed version of jQuery.
         /// These files should exist in the /Resources/Shared/Scripts/jquery directory.
         /// </remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static bool IsInstalled
         {
             get
@@ -156,7 +140,7 @@ namespace DotNetNuke.Framework
         /// This property checks for both the minified version and the full uncompressed version of jQuery UI.
         /// These files should exist in the /Resources/Shared/Scripts/jquery directory.
         /// </remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static bool IsUIInstalled
         {
             get
@@ -204,7 +188,7 @@ namespace DotNetNuke.Framework
         /// <value></value>
         /// <returns></returns>
         /// <remarks>This is a simple wrapper around the Host.jQueryDebug property</remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static bool UseDebugScript
         {
             get
@@ -224,7 +208,7 @@ namespace DotNetNuke.Framework
         /// <value></value>
         /// <returns></returns>
         /// <remarks>This is a simple wrapper around the Host.jQueryHosted property</remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static bool UseHostedScript
         {
             get
@@ -329,19 +313,19 @@ namespace DotNetNuke.Framework
 
         #region Public Methods
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string JQueryFileMapPath(bool getMinFile)
         {
             return HttpContext.Current.Server.MapPath(JQueryFile(getMinFile));
         }
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string JQueryUIFileMapPath(bool getMinFile)
         {
             return HttpContext.Current.Server.MapPath(JQueryUIFile(getMinFile));
         }
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string JQueryFile(bool getMinFile)
         {
             string jfile = jQueryDebugFile;
@@ -352,7 +336,7 @@ namespace DotNetNuke.Framework
             return jfile;
         }
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string JQueryMigrateFile(bool getMinFile)
 		{
 			string jfile = jQueryMigrateDebugFile;
@@ -363,7 +347,7 @@ namespace DotNetNuke.Framework
 			return jfile;
 		}
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string JQueryUIFile(bool getMinFile)
         {
             string jfile = jQueryUIDebugFile;
@@ -374,7 +358,7 @@ namespace DotNetNuke.Framework
             return jfile;
         }
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string GetJQueryScriptReference()
         {
             string scriptsrc = HostedUrl;
@@ -385,7 +369,7 @@ namespace DotNetNuke.Framework
             return scriptsrc;
         }
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string GetJQueryMigrateScriptReference()
 		{
 			string scriptsrc = HostedMigrateUrl;
@@ -396,7 +380,7 @@ namespace DotNetNuke.Framework
 			return scriptsrc;
 		}
 
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string GetJQueryUIScriptReference()
         {
             string scriptsrc = HostedUIUrl;
@@ -436,21 +420,21 @@ namespace DotNetNuke.Framework
 
         #region Obsolete Members
 
-        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load")]
+        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load. Scheduled removal in v10.0.0.")]
         public static void RegisterJQuery(Page page)
         {
             JavaScript.RequestRegistration(CommonJs.jQuery);
             JavaScript.RequestRegistration(CommonJs.jQueryMigrate);
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load")]
+        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load. Scheduled removal in v10.0.0.")]
         public static void RegisterJQueryUI(Page page)
         {
             RegisterJQuery(page);
             JavaScript.RequestRegistration(CommonJs.jQueryUI);
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load")]
+        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load. Scheduled removal in v10.0.0.")]
         public static void RegisterDnnJQueryPlugins(Page page)
         {
             RegisterJQueryUI(page);
@@ -458,7 +442,7 @@ namespace DotNetNuke.Framework
             JavaScript.RequestRegistration(CommonJs.DnnPlugins);
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load")]
+        [Obsolete("Obsoleted in 7.2.0 - registration occurs automatically during page load. Scheduled removal in v10.0.0.")]
         public static void RegisterHoverIntent(Page page)
         {
             JavaScript.RequestRegistration(CommonJs.HoverIntent);
@@ -470,7 +454,7 @@ namespace DotNetNuke.Framework
 
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.jQuery);")]
+        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.jQuery);. Scheduled removal in v10.0.0.")]
         public static void RequestRegistration()
         {
 
@@ -478,21 +462,21 @@ namespace DotNetNuke.Framework
             JavaScript.RequestRegistration(CommonJs.jQueryMigrate);
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.jQueryUI);")]
+        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.jQueryUI);. Scheduled removal in v10.0.0.")]
         public static void RequestUIRegistration()
         {
 
             JavaScript.RequestRegistration(CommonJs.jQueryUI);
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.DnnPlugins);")]
+        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.DnnPlugins);. Scheduled removal in v10.0.0.")]
         public static void RequestDnnPluginsRegistration()
         {
 
             JavaScript.RequestRegistration(CommonJs.DnnPlugins);
         }
 
-        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.HoverIntent);")]
+        [Obsolete("Obsoleted in 7.2.0 - use JavaScript.RequestRegistration(CommonJs.HoverIntent);. Scheduled removal in v10.0.0.")]
         public static void RequestHoverIntentRegistration()
         {
 

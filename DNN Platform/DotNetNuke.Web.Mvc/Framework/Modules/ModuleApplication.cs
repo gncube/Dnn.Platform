@@ -1,6 +1,7 @@
-﻿// Copyright (c) DNN Software. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Globalization;
 using System.Web.Mvc;
@@ -11,6 +12,8 @@ using System.Web;
 using System.Reflection;
 using DotNetNuke.Web.Mvc.Common;
 using Microsoft.Web.Infrastructure.DynamicValidationHelper;
+using DotNetNuke.Common;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DotNetNuke.Web.Mvc.Framework.Modules
 {
@@ -42,7 +45,7 @@ namespace DotNetNuke.Web.Mvc.Framework.Modules
             RequestContext = requestContext;
             // ReSharper disable once DoNotCallOverridableMethodsInConstructor
             DisableMvcResponseHeader = disableMvcResponseHeader;
-            ControllerFactory = ControllerBuilder.Current.GetControllerFactory();
+            ControllerFactory = Globals.DependencyProvider.GetRequiredService<IControllerFactory>();
             ViewEngines = new ViewEngineCollection();
             //ViewEngines.Add(new ModuleDelegatingViewEngine());
         }

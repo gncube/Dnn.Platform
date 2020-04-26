@@ -1,31 +1,15 @@
-﻿#region Copyright
-//
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions
-// of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Web.Http;
-
+using System.Web.Http.Hosting;
 using DotNetNuke.Common.Utilities;
 using DotNetNuke.ComponentModel;
 using DotNetNuke.Data;
@@ -46,6 +30,7 @@ using DotNetNuke.Web.InternalServices.Views.Search;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Modules;
 using DotNetNuke.Entities.Tabs;
+using DotNetNuke.Web.Api;
 
 namespace DotNetNuke.Tests.Web.InternalServices
 {
@@ -90,6 +75,8 @@ namespace DotNetNuke.Tests.Web.InternalServices
         
         private const string SearchIndexFolder = @"App_Data\SearchTests";
         private readonly double _readerStaleTimeSpan = TimeSpan.FromMilliseconds(100).TotalSeconds;
+
+        private const int DefaultSearchRetryTimes = 5;
 
         #endregion
 
@@ -145,7 +132,15 @@ namespace DotNetNuke.Tests.Web.InternalServices
             CBO.SetTestableInstance(_mockCBO.Object);
 
             //create instance of the SearchServiceController
-            _searchServiceController = new SearchServiceController(HtmlModDefId);
+            var request = new HttpRequestMessage();
+            var configuration = new HttpConfiguration();
+            var provider = new Mock<ITabAndModuleInfoProvider>();
+            ModuleInfo expectedModule;
+            provider.Setup(x => x.TryFindModuleInfo(request, out expectedModule)).Returns(true);
+            configuration.AddTabAndModuleInfoProvider(provider.Object);
+            request.Properties[HttpPropertyKeys.HttpConfigurationKey] = configuration;
+            _searchServiceController = new SearchServiceController(HtmlModDefId){Request = request };
+
             CreateNewLuceneControllerInstance();
         }
         [TearDown]
@@ -200,6 +195,8 @@ namespace DotNetNuke.Tests.Web.InternalServices
                 Constants.DefaultMinLen);
             _mockHostController.Setup(c => c.GetInteger(Constants.SearchMaxLengthKey, It.IsAny<int>())).Returns(
                 Constants.DefaultMaxLen);
+            _mockHostController.Setup(c => c.GetInteger(Constants.SearchRetryTimesKey, It.IsAny<int>())).Returns(
+                DefaultSearchRetryTimes);
             HostController.RegisterInstance(_mockHostController.Object);
         }
         private void SetupDataProvider()
@@ -276,7 +273,7 @@ namespace DotNetNuke.Tests.Web.InternalServices
             table.Columns.Add("LastModifiedByUserID", typeof(int));
             table.Columns.Add("LastModifiedOnDate", typeof(DateTime));
 
-            table.Rows.Add(1, null, UserName1, UserName1, UserName1, UserName1, 1, "host@change.me", null, null, 0, null,
+            table.Rows.Add(1, null, UserName1, UserName1, UserName1, UserName1, 1, "host@changeme.invalid", null, null, 0, null,
                            "127.0.0.1", 0, "8D3C800F-7A40-45D6-BA4D-E59A393F9800", DateTime.Now, null, -1, DateTime.Now,
                            -1, DateTime.Now);
             return table.CreateDataReader();
@@ -504,7 +501,7 @@ namespace DotNetNuke.Tests.Web.InternalServices
                                "ProcessorUserId",
                                "ProcessorPassword", "SiteLogHistory", "Email", "DefaultLanguage", "TimezoneOffset",
                                "AdminTabId", "HomeDirectory", "SplashTabId", "HomeTabId", "LoginTabId", "RegisterTabId",
-                               "UserTabId", "SearchTabId", "Custom404TabId", "Custom500TabId", "SuperTabId",
+                               "UserTabId", "SearchTabId", "Custom404TabId", "Custom500TabId", "TermsTabId", "PrivacyTabId", "SuperTabId",
                                "CreatedByUserID", "CreatedOnDate", "LastModifiedByUserID", "LastModifiedOnDate",
                                "CultureCode"
                            };
@@ -518,8 +515,8 @@ namespace DotNetNuke.Tests.Web.InternalServices
             table.Rows.Add(portalId, null, "My Website", "Logo.png", "Copyright 2011 by DotNetNuke Corporation", null,
                            "2", "0", "2", "USD", "0", "0", "0", "0", "0", "1", "My Website",
                            "DotNetNuke, DNN, Content, Management, CMS", null, "1057AC7A-3C08-4849-A3A6-3D2AB4662020",
-                           null, null, null, "0", "admin@change.me", "en-US", "-8", "58", "Portals/0", null,
-                           homePage.ToString(), null, null, "57", "56", "-1", "-1", "7", "-1", "2011-08-25 07:34:11",
+                           null, null, null, "0", "admin@changeme.invalid", "en-US", "-8", "58", "Portals/0", null,
+                           homePage.ToString(), null, null, "57", "56", "-1", "-1", null, null, "7", "-1", "2011-08-25 07:34:11",
                            "-1", "2011-08-25 07:34:29", culture);
 
             return table.CreateDataReader();

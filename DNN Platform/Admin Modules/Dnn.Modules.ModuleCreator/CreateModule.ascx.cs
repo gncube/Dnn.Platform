@@ -1,26 +1,7 @@
-#region Copyright
-
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2012
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 #region Usings
 
 using System;
@@ -40,7 +21,8 @@ using DotNetNuke.UI.Skins.Controls;
 using DotNetNuke.Entities.Controllers;
 using DotNetNuke.Entities.Content.Taxonomy;
 using DotNetNuke.Services.Log.EventLog;
-
+using DotNetNuke.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 #endregion
 
 namespace Dnn.Module.ModuleCreator
@@ -48,6 +30,11 @@ namespace Dnn.Module.ModuleCreator
 
     public partial class CreateModule : PortalModuleBase
     {
+        private readonly INavigationManager _navigationManager;
+        public CreateModule()
+        {
+            _navigationManager = DependencyProvider.GetRequiredService<INavigationManager>();
+        }
 
         #region Private Methods
 
@@ -89,7 +76,7 @@ namespace Dnn.Module.ModuleCreator
             string[] folderList = Directory.GetDirectories(moduleTemplatePath);
             foreach (string folderPath in folderList)
             {
-                if (Path.GetFileName(folderPath).ToLower().StartsWith("module"))
+                if (Path.GetFileName(folderPath).ToLowerInvariant().StartsWith("module"))
                 {
                     cboTemplate.Items.Add(new ListItem(Path.GetFileName(folderPath)));
                 }
@@ -147,14 +134,14 @@ namespace Dnn.Module.ModuleCreator
                 sourceCode = sourceCode.Replace("_CONTROL_", GetControl());
                 sourceCode = sourceCode.Replace("_YEAR_", DateTime.Now.Year.ToString());
 
-                //get filename 
+                //get filename
                 fileName = Path.GetFileName(filePath);
                 fileName = fileName.Replace("template", GetControl());
                 fileName = fileName.Replace("_OWNER_", GetOwner());
                 fileName = fileName.Replace("_MODULE_", GetModule());
                 fileName = fileName.Replace("_CONTROL_", GetControl());
 
-                switch (Path.GetExtension(filePath).ToLower())
+                switch (Path.GetExtension(filePath).ToLowerInvariant())
                 {
                     case ".ascx":
                         controlName = fileName;
@@ -169,13 +156,13 @@ namespace Dnn.Module.ModuleCreator
                         modulePath = modulePath + "\\App_LocalResources\\";
                         break;
                     case ".vb":
-                        if (filePath.ToLower().IndexOf(".ascx") == -1)
+                        if (filePath.ToLowerInvariant().IndexOf(".ascx") == -1)
                         {
                             modulePath = modulePath.Replace("DesktopModules", "App_Code");
                         }
                         break;
                     case ".cs":
-                        if (filePath.ToLower().IndexOf(".ascx") == -1)
+                        if (filePath.ToLowerInvariant().IndexOf(".ascx") == -1)
                         {
                             modulePath = modulePath.Replace("DesktopModules", "App_Code");
                         }
@@ -325,7 +312,7 @@ namespace Dnn.Module.ModuleCreator
                         var objModuleDefinition = new ModuleDefinitionInfo();
                         objModuleDefinition.ModuleDefID = Null.NullInteger;
                         objModuleDefinition.DesktopModuleID = objDesktopModule.DesktopModuleID;
-                        // need core enhancement to have a unique DefinitionName  
+                        // need core enhancement to have a unique DefinitionName
                         objModuleDefinition.FriendlyName = GetClassName();
                         //objModuleDefinition.FriendlyName = txtModule.Text;
                         //objModuleDefinition.DefinitionName = GetClassName();
@@ -438,7 +425,7 @@ namespace Dnn.Module.ModuleCreator
                     HostController.Instance.Update("Owner", txtOwner.Text, false);
                     if (CreateModuleDefinition())
                     {
-                        Response.Redirect(Globals.NavigateURL(), true);
+                        Response.Redirect(_navigationManager.NavigateURL(), true);
                     }
                 }
                 else

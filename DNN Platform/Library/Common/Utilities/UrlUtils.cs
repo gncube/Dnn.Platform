@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -26,7 +10,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI;
-
+using Microsoft.Extensions.DependencyInjection;
+using DotNetNuke.Abstractions;
 using DotNetNuke.Entities.Controllers;
 using DotNetNuke.Entities.Host;
 using DotNetNuke.Entities.Portals;
@@ -40,6 +25,8 @@ namespace DotNetNuke.Common.Utilities
 {
     public class UrlUtils
     {
+        private static readonly INavigationManager _navigationManager = Globals.DependencyProvider.GetRequiredService<INavigationManager>();
+
         public static string Combine(string baseUrl, string relativeUrl)
         {
             if (baseUrl.Length == 0)
@@ -131,7 +118,7 @@ namespace DotNetNuke.Common.Utilities
             {
                 if (keys[i] != null)
                 {
-                    switch (keys[i].ToLower())
+                    switch (keys[i].ToLowerInvariant())
                     {
                         case "tabid":
                         case "ctl":
@@ -139,7 +126,7 @@ namespace DotNetNuke.Common.Utilities
                             //skip parameter
                             break;
                         default:
-                            if ((keys[i].ToLower() == "portalid") && Globals.GetPortalSettings().ActiveTab.IsSuperTab)
+                            if ((keys[i].Equals("portalid", StringComparison.InvariantCultureIgnoreCase)) && Globals.GetPortalSettings().ActiveTab.IsSuperTab)
                             {
                                 //skip parameter
                                 //navigateURL adds portalid to querystring if tab is superTab
@@ -174,23 +161,29 @@ namespace DotNetNuke.Common.Utilities
         /// <returns>true if HTTPS or if HTTP with an SSL offload header value, false otherwise</returns>
         public static bool IsSecureConnectionOrSslOffload(HttpRequest request)
         {
-            if (request.IsSecureConnection)
-            {
-                return true;
-            }
-            string ssloffloadheader = HostController.Instance.GetString("SSLOffloadHeader", "");
+            var isSecureTab = PortalController.Instance.GetCurrentPortalSettings()?.ActiveTab.IsSecure ?? false;
+            return request.IsSecureConnection || (IsSslOffloadEnabled(request) && isSecureTab);
+        }
+
+        public static bool IsSslOffloadEnabled(HttpRequest request)
+        {
+            var ssloffloadheader = HostController.Instance.GetString("SSLOffloadHeader", "");
+
             //if the ssloffloadheader variable has been set check to see if a request header with that type exists
             if (!string.IsNullOrEmpty(ssloffloadheader))
             {
-                string ssloffload = request.Headers[ssloffloadheader];
-                if (!string.IsNullOrEmpty(ssloffload))
+                var ssloffloadValue = string.Empty;
+                if (ssloffloadheader.Contains(":"))
                 {
-                    PortalSettings portalSettings = PortalController.Instance.GetCurrentPortalSettings();
-                    if (portalSettings.ActiveTab.IsSecure)
-                    {
+                    var settingParts = ssloffloadheader.Split(':');
+                    ssloffloadheader = settingParts[0];
+                    ssloffloadValue = settingParts[1];
+                }
+
+                string ssloffload = request.Headers[ssloffloadheader];
+                if (!string.IsNullOrEmpty(ssloffload) && (string.IsNullOrWhiteSpace(ssloffloadValue) || ssloffloadValue == ssloffload))
+                {
                         return true;
-                    }
-                    
                 }
             }
             return false;
@@ -204,7 +197,7 @@ namespace DotNetNuke.Common.Utilities
         public static string PopUpUrl(string url, Control control, PortalSettings portalSettings, bool onClickEvent, bool responseRedirect)
         {
             return PopUpUrl(url, control, portalSettings, onClickEvent, responseRedirect, 550, 950);
-        }       
+        }
 
         public static string PopUpUrl(string url, Control control, PortalSettings portalSettings, bool onClickEvent, bool responseRedirect, int windowHeight, int windowWidth)
         {
@@ -218,7 +211,7 @@ namespace DotNetNuke.Common.Utilities
 
         public static string PopUpUrl(string url, Control control, PortalSettings portalSettings, bool onClickEvent, bool responseRedirect, int windowHeight, int windowWidth, bool refresh, string closingUrl)
         {
-	        
+
             if (UrlUtils.IsSecureConnectionOrSslOffload(HttpContext.Current.Request))
             {
                 url = url.Replace("http://", "https://");
@@ -247,18 +240,18 @@ namespace DotNetNuke.Common.Utilities
                 {
                     popUpScriptFormat = "dnnModal.show('{0}{1}popUp=true',/*showReturn*/{2},{3},{4},{5},'{6}')";
                     closingUrl = (closingUrl != Null.NullString) ? closingUrl : String.Empty;
-                    popUpUrl = "javascript:" + String.Format(popUpScriptFormat, popUpUrl, delimiter, onClickEvent.ToString().ToLower(), windowHeight, windowWidth, refresh.ToString().ToLower(), closingUrl);
+                    popUpUrl = "javascript:" + String.Format(popUpScriptFormat, popUpUrl, delimiter, onClickEvent.ToString().ToLowerInvariant(), windowHeight, windowWidth, refresh.ToString().ToLower(), closingUrl);
                 }
                 else
                 {
                     //Determines if the resulting JS call should return or not.
                     if (popUpUrl.Contains("/*showReturn*/false"))
                     {
-                        popUpUrl = popUpUrl.Replace("/*showReturn*/false", "/*showReturn*/" + onClickEvent.ToString().ToLower());
+                        popUpUrl = popUpUrl.Replace("/*showReturn*/false", "/*showReturn*/" + onClickEvent.ToString().ToLowerInvariant());
                     }
                     else
                     {
-                        popUpUrl = popUpUrl.Replace("/*showReturn*/true", "/*showReturn*/" + onClickEvent.ToString().ToLower());
+                        popUpUrl = popUpUrl.Replace("/*showReturn*/true", "/*showReturn*/" + onClickEvent.ToString().ToLowerInvariant());
                     }
                 }
             }
@@ -272,7 +265,7 @@ namespace DotNetNuke.Common.Utilities
         public static string ClosePopUp(Boolean refresh, string url, bool onClickEvent)
         {
             var closePopUpStr = "dnnModal.closePopUp({0}, {1})";
-            closePopUpStr = "javascript:" + string.Format(closePopUpStr, refresh.ToString().ToLower(), "'" + url + "'");
+            closePopUpStr = "javascript:" + string.Format(closePopUpStr, refresh.ToString().ToLowerInvariant(), "'" + url + "'");
 
             // Removes the javascript txt for onClick scripts)
             if (onClickEvent && closePopUpStr.StartsWith("javascript:")) closePopUpStr = closePopUpStr.Replace("javascript:", "");
@@ -384,6 +377,11 @@ namespace DotNetNuke.Common.Utilities
             return HttpContext.Current != null && HttpContext.Current.Request.Url.ToString().IndexOf("popUp=true", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
+        public static bool IsPopUp(string url)
+        {
+            return url .IndexOf("popUp=true", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         /// <summary>
         /// Redirect current response to 404 error page or output 404 content if error page not defined.
         /// </summary>
@@ -393,7 +391,7 @@ namespace DotNetNuke.Common.Utilities
         {
             if (portalSetting?.ErrorPage404 > Null.NullInteger)
             {
-                response.Redirect(Globals.NavigateURL(portalSetting.ErrorPage404, string.Empty, "status=404"));
+                response.Redirect(_navigationManager.NavigateURL(portalSetting.ErrorPage404, string.Empty, "status=404"));
             }
             else
             {

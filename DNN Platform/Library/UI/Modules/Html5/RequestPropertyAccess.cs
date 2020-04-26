@@ -1,6 +1,7 @@
-﻿// Copyright (c) DNN Software. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System.Globalization;
 using System.Web;
 using DotNetNuke.Entities.Users;
@@ -24,7 +25,7 @@ namespace DotNetNuke.UI.Modules.Html5
 
         public string GetProperty(string propertyName, string format, CultureInfo formatProvider, UserInfo accessingUser, Scope accessLevel, ref bool propertyNotFound)
         {
-            switch (propertyName.ToLower())
+            switch (propertyName.ToLowerInvariant())
             {
                 case "querystring":
                     return _request.QueryString.ToString();

@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -35,6 +19,7 @@ using System.Web.UI.WebControls;
 
 using DotNetNuke.Application;
 using DotNetNuke.Collections.Internal;
+using DotNetNuke.Abstractions;
 using DotNetNuke.Common.Utilities;
 using DotNetNuke.Entities.Controllers;
 using DotNetNuke.Entities.Host;
@@ -57,7 +42,7 @@ using DotNetNuke.UI.Skins.EventListeners;
 using DotNetNuke.UI.Utilities;
 using DotNetNuke.Web.Client;
 using DotNetNuke.Web.Client.ClientResourceManagement;
-
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
 
 using Globals = DotNetNuke.Common.Globals;
@@ -102,6 +87,12 @@ namespace DotNetNuke.UI.Skins
 
         #endregion
 
+        public Skin()
+        {
+            ModuleControlPipeline = Globals.DependencyProvider.GetRequiredService<IModuleControlPipeline>();
+            NavigationManager = Globals.DependencyProvider.GetRequiredService<INavigationManager>();
+        }
+
         #region Protected Properties
 
         /// -----------------------------------------------------------------------------
@@ -119,6 +110,8 @@ namespace DotNetNuke.UI.Skins
             }
         }
 
+        protected IModuleControlPipeline ModuleControlPipeline { get; }
+        protected INavigationManager NavigationManager { get; }
         #endregion
 
         #region Friend Properties
@@ -340,7 +333,7 @@ namespace DotNetNuke.UI.Skins
                         case "article":
                         case "aside":
                             //content pane
-                            if (objPaneControl.ID.ToLower() != "controlpanel")
+                            if (!objPaneControl.ID.Equals("controlpanel", StringComparison.InvariantCultureIgnoreCase))
                             {
                                 //Add to the PortalSettings (for use in the Control Panel)
                                 PortalSettings.ActiveTab.Panes.Add(objPaneControl.ID);
@@ -365,7 +358,7 @@ namespace DotNetNuke.UI.Skins
             try
             {
                 string skinSrc = skinPath;
-                if (skinPath.ToLower().IndexOf(Globals.ApplicationPath, StringComparison.Ordinal) != -1)
+                if (skinPath.IndexOf(Globals.ApplicationPath, StringComparison.OrdinalIgnoreCase) != -1)
                 {
                     skinPath = skinPath.Remove(0, Globals.ApplicationPath.Length);
                 }
@@ -458,7 +451,7 @@ namespace DotNetNuke.UI.Skins
 
                     if (TabVersionController.Instance.GetTabVersions(TabController.CurrentPage.TabID).All(tabVersion => tabVersion.Version != urlVersion))
                     {
-                        Response.Redirect(Globals.NavigateURL(PortalSettings.ErrorPage404, string.Empty, "status=404"));
+                        Response.Redirect(NavigationManager.NavigateURL(PortalSettings.ErrorPage404, string.Empty, "status=404"));
                     }
                 }
 
@@ -639,6 +632,9 @@ namespace DotNetNuke.UI.Skins
 					messageType = (ModuleMessage.ModuleMessageType)Enum.Parse(typeof (ModuleMessage.ModuleMessageType), HttpContext.Current.Items[OnInitMessageType].ToString(), true);
 				}
 				AddPageMessage(this, string.Empty, HttpContext.Current.Items[OnInitMessage].ToString(), messageType);
+
+                JavaScript.RequestRegistration(CommonJs.DnnPlugins);
+                ServicesFramework.Instance.RequestAjaxAntiForgerySupport();
             }
 
             //Process the Panes attributes
@@ -999,7 +995,7 @@ namespace DotNetNuke.UI.Skins
             {
                 if(PortalSettings.ActiveTab.TabID == PortalSettings.UserTabId || PortalSettings.ActiveTab.ParentId == PortalSettings.UserTabId)
                 {
-                    var profileModule = ModuleControlFactory.LoadModuleControl(Page, module) as IProfileModule;
+                    var profileModule = ModuleControlPipeline.LoadModuleControl(Page, module) as IProfileModule;
                     if (profileModule == null || profileModule.DisplayModule)
                     {
                         pane.InjectModule(module);

@@ -1,29 +1,13 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
-using System.Web.UI.WebControls;
 using System.Xml;
 
 #endregion
@@ -180,23 +164,23 @@ namespace DotNetNuke.Services.Exceptions
 		public override string ToString()
 		{
 			var str = new StringBuilder();
-			str.Append("<p><strong>AssemblyVersion:</strong>" + AssemblyVersion + "</p>");
+			str.Append("<p><strong>AssemblyVersion:</strong>" + WebUtility.HtmlEncode(AssemblyVersion) + "</p>");
 			str.Append("<p><strong>PortalId:</strong>" + PortalId + "</p>");
 			str.Append("<p><strong>UserId:</strong>" + UserId + "</p>");
 			str.Append("<p><strong>TabId:</strong>" + TabId + "</p>");
-			str.Append("<p><strong>RawUrl:</strong>" + RawUrl + "</p>");
-			str.Append("<p><strong>Referrer:</strong>" + Referrer + "</p>");
-			str.Append("<p><strong>UserAgent:</strong>" + UserAgent + "</p>");
-			str.Append("<p><strong>ExceptionHash:</strong>" + ExceptionHash + "</p>");
-			str.Append("<p><strong>Message:</strong>" + Message + "</p>");
-			str.Append("<p><strong>StackTrace:</strong><pre>" + StackTrace.Replace(") at ", ")<br/>at ") + "</pre></p>");
-			str.Append("<p><strong>InnerMessage:</strong>" + InnerMessage + "</p>");
-			str.Append("<p><strong>InnerStackTrace:</strong><pre>" + InnerStackTrace.Replace(") at ",")<br/>at ") + "</pre></p>");
-			str.Append("<p><strong>Source:</strong>" + Source + "</p>");
-			str.Append("<p><strong>FileName:</strong>" + FileName + "</p>");
+			str.Append("<p><strong>RawUrl:</strong>" + WebUtility.HtmlEncode(RawUrl) + "</p>");
+			str.Append("<p><strong>Referrer:</strong>" + WebUtility.HtmlEncode(Referrer) + "</p>");
+			str.Append("<p><strong>UserAgent:</strong>" + WebUtility.HtmlEncode(UserAgent) + "</p>");
+			str.Append("<p><strong>ExceptionHash:</strong>" + WebUtility.HtmlEncode(ExceptionHash) + "</p>");
+			str.Append("<p><strong>Message:</strong>" + WebUtility.HtmlEncode(Message) + "</p>");
+			str.Append("<p><strong>StackTrace:</strong><pre>" + WebUtility.HtmlEncode(StackTrace)?.Replace(") at ", ")<br/>at ") + "</pre></p>");
+			str.Append("<p><strong>InnerMessage:</strong>" + WebUtility.HtmlEncode(InnerMessage) + "</p>");
+			str.Append("<p><strong>InnerStackTrace:</strong><pre>" + WebUtility.HtmlEncode(InnerStackTrace)?.Replace(") at ",")<br/>at ") + "</pre></p>");
+			str.Append("<p><strong>Source:</strong>" + WebUtility.HtmlEncode(Source) + "</p>");
+			str.Append("<p><strong>FileName:</strong>" + WebUtility.HtmlEncode(FileName) + "</p>");
 			str.Append("<p><strong>FileLineNumber:</strong>" + FileLineNumber + "</p>");
 			str.Append("<p><strong>FileColumnNumber:</strong>" + FileColumnNumber + "</p>");
-			str.Append("<p><strong>Method:</strong>" + Method + "</p>");
+			str.Append("<p><strong>Method:</strong>" + WebUtility.HtmlEncode(Method) + "</p>");
 			return str.ToString();
 		}
 

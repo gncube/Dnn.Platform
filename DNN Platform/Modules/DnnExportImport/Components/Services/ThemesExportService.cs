@@ -1,4 +1,8 @@
-﻿using Dnn.ExportImport.Components.Dto;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using Dnn.ExportImport.Components.Dto;
 using Dnn.ExportImport.Components.Entities;
 using DotNetNuke.Common.Utilities;
 using DotNetNuke.Common;
@@ -6,6 +10,7 @@ using Dnn.ExportImport.Components.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Dnn.ExportImport.Dto.Pages;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Instrumentation;
@@ -55,26 +60,30 @@ namespace Dnn.ExportImport.Components.Services
                     CheckPoint.TotalItems = CheckPoint.TotalItems <= 0 ? totalThemes : CheckPoint.TotalItems;
                     if (CheckPointStageCallback(this)) return;
 
-                    foreach (var theme in exportThemes)
+                    using (var archive = CompressionUtil.OpenCreate(packagesZipFile))
                     {
-                        var filePath = SkinController.FormatSkinSrc(theme, _portalSettings);
-                        var physicalPath = Path.Combine(Globals.ApplicationMapPath, filePath.TrimStart('/'));
-                        if (Directory.Exists(physicalPath))
+                        foreach (var theme in exportThemes)
                         {
-                            foreach (var file in Directory.GetFiles(physicalPath, "*.*", SearchOption.AllDirectories))
+                            var filePath = SkinController.FormatSkinSrc(theme, _portalSettings);
+                            var physicalPath = Path.Combine(Globals.ApplicationMapPath, filePath.TrimStart('/'));
+                            if (Directory.Exists(physicalPath))
                             {
-                                var folderOffset = Path.Combine(Globals.ApplicationMapPath, "Portals").Length + 1;
-                                CompressionUtil.AddFileToArchive(file, packagesZipFile, folderOffset);
+                                foreach (var file in Directory.GetFiles(physicalPath, "*.*", SearchOption.AllDirectories))
+                                {
+                                    var folderOffset = Path.Combine(Globals.ApplicationMapPath, "Portals").Length + 1;
+                                    CompressionUtil.AddFileToArchive(archive, file, folderOffset);
+                                }
+                                totalThemesExported += 1;
                             }
-                            totalThemesExported += 1;
-                        }
 
-                        CheckPoint.ProcessedItems++;
-                        CheckPoint.Progress = CheckPoint.ProcessedItems * 100.0 / totalThemes;
-                        currentIndex++;
-                        //After every 10 items, call the checkpoint stage. This is to avoid too many frequent updates to DB.
-                        if (currentIndex % 10 == 0 && CheckPointStageCallback(this)) return;
+                            CheckPoint.ProcessedItems++;
+                            CheckPoint.Progress = CheckPoint.ProcessedItems * 100.0 / totalThemes;
+                            currentIndex++;
+                            //After every 10 items, call the checkpoint stage. This is to avoid too many frequent updates to DB.
+                            if (currentIndex % 10 == 0 && CheckPointStageCallback(this)) return;
+                        }
                     }
+
                     CheckPoint.Stage++;
                     CheckPoint.Completed = true;
                     CheckPoint.Progress = 100;
@@ -206,7 +215,7 @@ namespace Dnn.ExportImport.Components.Services
             foreach (var theme in exportThemes)
             {
                 var packageName = theme.Substring(0, theme.LastIndexOf("/", StringComparison.InvariantCultureIgnoreCase));
-                if (!themePackages.Contains(packageName))
+                if (!themePackages.Any(p => p.Equals(packageName, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     themePackages.Add(packageName);
                 }

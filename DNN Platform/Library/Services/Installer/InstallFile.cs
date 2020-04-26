@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -293,13 +277,13 @@ namespace DotNetNuke.Services.Installer
                 Name = fileName.Substring(10, fileName.Length - 10);
                 Path = fileName.Substring(0, 10);
             }
-            if (Name.ToLower() == "manifest.xml")
+            if (Name.Equals("manifest.xml", StringComparison.InvariantCultureIgnoreCase))
             {
                 Type = InstallFileType.Manifest;
             }
             else
             {
-                switch (Extension.ToLower())
+                switch (Extension.ToLowerInvariant())
                 {
                     case "ascx":
                         Type = InstallFileType.Ascx;
@@ -321,7 +305,7 @@ namespace DotNetNuke.Services.Installer
                         Type = InstallFileType.Resources;
                         break;
                     default:
-                        if (Extension.ToLower().EndsWith("dataprovider") || Extension.ToLower() == "sql")
+                        if (Extension.EndsWith("dataprovider", StringComparison.InvariantCultureIgnoreCase) || Extension.Equals("sql", StringComparison.InvariantCultureIgnoreCase))
                         {
                             Type = InstallFileType.Script;
                         }

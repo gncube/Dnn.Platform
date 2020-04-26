@@ -1,32 +1,19 @@
-﻿#region Copyright
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Routing;
+using DotNetNuke.Abstractions;
+using DotNetNuke.Common;
+using DotNetNuke.DependencyInjection;
 using DotNetNuke.Entities.Portals;
 using DotNetNuke.Framework.Internal.Reflection;
 using DotNetNuke.Framework.Reflections;
-
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
 using ServicesRoutingManager = DotNetNuke.Web.Api.Internal.ServicesRoutingManager;
@@ -51,12 +38,22 @@ namespace DotNetNuke.Tests.Web.Api
             _mockPortalController = new Mock<IPortalController>();
             _portalController = _mockPortalController.Object;
             PortalController.SetTestableInstance(_portalController);
+
+            var navigationManagerMock = new Mock<INavigationManager>();
+            var services = new ServiceCollection();
+            services.AddScoped(typeof(INavigationManager), (x) => navigationManagerMock.Object);
+            Globals.DependencyProvider = services.BuildServiceProvider();
         }
 
         [TearDown]
         public void TearDown()
         {
             PortalController.ClearInstance();
+
+            if (Globals.DependencyProvider is IDisposable disposable)
+                disposable.Dispose();
+
+            Globals.DependencyProvider = null;
         }
 
         [Test]

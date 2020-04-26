@@ -1,5 +1,12 @@
-﻿using System;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using DotNetNuke.Common;
+using DotNetNuke.Abstractions;
 using DotNetNuke.Common.Utilities;
 
 namespace DotNetNuke.Modules.Groups {
@@ -16,7 +23,7 @@ namespace DotNetNuke.Modules.Groups {
         }
         public static string NavigateUrl(int TabId, string[] @params)
         {
-            return Common.Globals.NavigateURL(TabId, "", @params);
+            return Globals.DependencyProvider.GetRequiredService<INavigationManager>()?.NavigateURL(TabId, "", @params);
         }
         public static string[] AddParams(string param, string[] currParams)
         {

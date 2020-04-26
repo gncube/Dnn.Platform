@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -579,7 +563,8 @@ namespace DotNetNuke.Entities.Host
         /// <remarks>
         ///   Defaults to False
         /// </remarks>
-        /// -----------------------------------------------------------------------------
+        /// ----------------------------------------------------------------------------- 
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public static bool EnableUsersOnline
         {
             get
@@ -634,7 +619,18 @@ namespace DotNetNuke.Entities.Host
                 return new FileExtensionWhitelist(HostController.Instance.GetString("FileExtensions"));
             }
         }
-        
+
+        /// <summary>
+        ///   Default list of extensions an end user is allowed to upload.
+        /// </summary>
+        public static FileExtensionWhitelist DefaultEndUserExtensionWhitelist
+        {
+            get
+            {
+                return new FileExtensionWhitelist(HostController.Instance.GetString("DefaultEndUserExtensionWhitelist"));
+            }
+        }
+
         /// -----------------------------------------------------------------------------
         /// <summary>
         ///   Gets the GUID
@@ -1223,7 +1219,7 @@ namespace DotNetNuke.Entities.Host
         ///   Defaults to 1
         /// </remarks>
         /// -----------------------------------------------------------------------------
-        [Obsolete("Deprecated in 8.0.0")]
+        [Obsolete("Deprecated in 8.0.0. Scheduled removal in v11.0.0.")]
         public static int SiteLogBuffer
         {
             get
@@ -1240,7 +1236,7 @@ namespace DotNetNuke.Entities.Host
         ///   Defaults to -1
         /// </remarks>
         /// -----------------------------------------------------------------------------
-        [Obsolete("Deprecated in 8.0.0")]
+        [Obsolete("Deprecated in 8.0.0. Scheduled removal in v11.0.0.")]
         public static int SiteLogHistory
         {
             get
@@ -1257,7 +1253,7 @@ namespace DotNetNuke.Entities.Host
         ///   Defaults to "D"
         /// </remarks>
         /// -----------------------------------------------------------------------------
-        [Obsolete("Deprecated in 8.0.0")]
+        [Obsolete("Deprecated in 8.0.0. Scheduled removal in v11.0.0.")]
         public static string SiteLogStorage
         {
             get
@@ -1492,6 +1488,7 @@ namespace DotNetNuke.Entities.Host
         ///   Defaults to 15
         /// </remarks>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public static int UsersOnlineTimeWindow
         {
             get
@@ -1522,7 +1519,7 @@ namespace DotNetNuke.Entities.Host
         /// <remarks>
         ///   Defaults to False
         /// </remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static bool jQueryDebug
         {
             get
@@ -1537,7 +1534,7 @@ namespace DotNetNuke.Entities.Host
         /// <remarks>
         ///   Defaults to False
         /// </remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static bool jQueryHosted
         {
             get
@@ -1553,7 +1550,7 @@ namespace DotNetNuke.Entities.Host
         ///   Defaults to the DefaultHostedUrl constant in the jQuery class.
         ///   The framework will default to the latest released 1.x version hosted on Google.
         /// </remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string jQueryUrl
         {
             get
@@ -1576,7 +1573,7 @@ namespace DotNetNuke.Entities.Host
 		///   Defaults to the DefaultHostedUrl constant in the jQuery class.
 		///   The framework will default to the latest released 1.x version hosted on Google.
 		/// </remarks>
-		[Obsolete("This is managed through the JavaScript Library package")]
+		[Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
 		public static string jQueryMigrateUrl
 		{
 			get
@@ -1599,7 +1596,7 @@ namespace DotNetNuke.Entities.Host
         ///   Defaults to the DefaultUIHostedUrl constant in the jQuery class.
         ///   The framework will default to the latest released 1.x version hosted on Google.
         /// </remarks>
-        [Obsolete("This is managed through the JavaScript Library package")]
+        [Obsolete("This is managed through the JavaScript Library package. Scheduled removal in v10.0.0.")]
         public static string jQueryUIUrl
         {
             get
@@ -1635,7 +1632,7 @@ namespace DotNetNuke.Entities.Host
 		/// <remarks>
 		///   Defaults to False
 		/// </remarks>
-		[Obsolete("Not used anymore")]
+		[Obsolete("Not used anymore. Scheduled removal in v10.0.0.")]
 		public static bool EnableTelerikCdn
 		{
 			get
@@ -1647,7 +1644,7 @@ namespace DotNetNuke.Entities.Host
         /// <summary>
         /// Get Telerik CDN Basic Path.
         /// </summary>
-        [Obsolete("Not used anymore")]
+        [Obsolete("Not used anymore. Scheduled removal in v10.0.0.")]
         public static string TelerikCdnBasicUrl
 	    {
 			get
@@ -1659,7 +1656,7 @@ namespace DotNetNuke.Entities.Host
         /// <summary>
         /// Get Telerik CDN Secure Path.
         /// </summary>
-        [Obsolete("Not used anymore")]
+        [Obsolete("Not used anymore. Scheduled removal in v10.0.0.")]
         public static string TelerikCdnSecureUrl
 		{
 			get
@@ -1684,6 +1681,14 @@ namespace DotNetNuke.Entities.Host
 				return timeout;
 			}
 		}
+
+        /// <summary>
+        /// Get a value indicating whether to put the entire instance into maintenance mode
+        /// </summary>
+        public static bool IsLocked
+        {
+            get { return HostController.Instance.GetBoolean("IsLocked", false); }
+        }
 
         #endregion
     }

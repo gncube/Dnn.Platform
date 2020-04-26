@@ -1,26 +1,11 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
+using System.Diagnostics;
 using System.Reflection;
 
 using DotNetNuke.Common.Utilities;
@@ -71,7 +56,7 @@ namespace DotNetNuke.Application
         /// <summary>
         /// Gets the description of the application
         /// </summary>
-        /// <value>Fixed result: DotNetNuke Community Edition</value>
+        /// <value>Fixed result: DNN Platform</value>
         public virtual string Description
         {
             get
@@ -83,24 +68,24 @@ namespace DotNetNuke.Application
         /// <summary>
         /// Gets the help URL related to the DotNetNuke application
         /// </summary>
-        /// <value>Fixed result: http://www.dotnetnuke.com/default.aspx?tabid=787 </value>
+        /// <value>Fixed result: https://dnndocs.com/ </value>
         public string HelpUrl
         {
             get
             {
-                return "http://www.dotnetnuke.com/default.aspx?tabid=787";
+                return "https://dnndocs.com/";
             }
         }
 
         /// <summary>
         /// Gets the legal copyright.
         /// </summary>
-        /// <value>Dynamic: DotNetNuke® is copyright 2002-todays year by DotNetNuke Corporation"</value>
+        /// <value>Dynamic: DNN Platform is copyright 2002-todays year by .NET Foundation"</value>
         public string LegalCopyright
         {
             get
             {
-                return string.Concat("DotNetNuke® is copyright 2002-", DateTime.Today.ToString("yyyy")," by DotNetNuke Corporation");
+                return string.Concat("DNN Platform is copyright 2002-", DateTime.Today.ToString("yyyy")," by .NET Foundation");
             }
         }
 
@@ -196,7 +181,7 @@ namespace DotNetNuke.Application
         /// <summary>
         /// Gets the upgrade URL.
         /// </summary>
-        /// <value>Fixed value: http://update.dotnetnuke.com </value>
+        /// <value>Fixed value: https://dnnplatform.io </value>
         public string UpgradeUrl
         {
             get
@@ -204,7 +189,7 @@ namespace DotNetNuke.Application
 	            var url = Config.GetSetting("UpdateServiceUrl");
 				if (string.IsNullOrEmpty(url))
 				{
-					return "http://update.dotnetnuke.com";
+					return "https://dnnplatform.io";
 				}
 	            return url;
             }
@@ -213,12 +198,12 @@ namespace DotNetNuke.Application
         /// <summary>
         /// Gets the URL of the application
         /// </summary>
-        /// <value>Fixed value: http://www.dotnetnuke.com </value>
+        /// <value>Fixed value: https://dnncommunity.org</value>
         public string Url
         {
             get
             {
-                return "http://www.dotnetnuke.com";
+                return "https://dnncommunity.org";
             }
         }
 
@@ -230,7 +215,9 @@ namespace DotNetNuke.Application
         {
             get
             {
-                return Assembly.GetExecutingAssembly().GetName().Version;
+                var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                var fileVersion = FileVersionInfo.GetVersionInfo(assemblyLocation).FileVersion;
+                return new Version(fileVersion);
             }
         }
 

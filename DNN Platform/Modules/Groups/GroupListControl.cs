@@ -1,4 +1,8 @@
-﻿using System;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -112,12 +116,12 @@ namespace DotNetNuke.Modules.Groups.Controls
 
             if (!string.IsNullOrEmpty(SearchFilter))
             {
-                whereCls.Add(grp => grp.RoleName.ToLower().Contains(SearchFilter.ToLower()) || grp.Description.ToLower().Contains(SearchFilter.ToLower()));
+                whereCls.Add(grp => grp.RoleName.ToLowerInvariant().Contains(SearchFilter.ToLowerInvariant()) || grp.Description.ToLowerInvariant().Contains(SearchFilter.ToLowerInvariant()));
             }
 
             var roles = RoleController.Instance.GetRoles(PortalSettings.PortalId, grp => TestPredicateGroup(whereCls, grp));
 
-            if (SortDirection.ToLower() == "asc")
+            if (SortDirection.ToLowerInvariant() == "asc")
                 roles = roles.OrderBy(info => GetOrderByProperty(info, SortField)).ToList();
             else
                 roles = roles.OrderByDescending(info => GetOrderByProperty(info, SortField)).ToList();

@@ -1,26 +1,7 @@
-#region Copyright
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke� - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 #region Usings
 
 using System;
@@ -207,7 +188,7 @@ namespace DotNetNuke.Entities.Tabs
             return tab.TabID;
         }
 
-        private void CreateLocalizedCopyInternal(TabInfo originalTab, Locale locale, bool allTabsModulesFromDefault, bool clearCache)
+        private void CreateLocalizedCopyInternal(TabInfo originalTab, Locale locale, bool allTabsModulesFromDefault, bool clearCache, bool insertAfterOriginal = false)
         {
 			try
 			{
@@ -218,6 +199,7 @@ namespace DotNetNuke.Entities.Tabs
 				TabInfo localizedCopy = originalTab.Clone();
 				localizedCopy.TabID = Null.NullInteger;
 				localizedCopy.StateID = Null.NullInteger;
+			    localizedCopy.ContentItemId = Null.NullInteger;
 
 				//Set Guids and Culture Code
 				localizedCopy.UniqueId = Guid.NewGuid();
@@ -225,7 +207,14 @@ namespace DotNetNuke.Entities.Tabs
 				localizedCopy.LocalizedVersionGuid = Guid.NewGuid();
 				localizedCopy.CultureCode = locale.Code;
 				localizedCopy.TabName = localizedCopy.TabName + " (" + locale.Code + ")";
-				if (locale == defaultLocale)
+			    
+                //copy page tags
+			    foreach (var term in originalTab.Terms)
+			    {
+			        localizedCopy.Terms.Add(term);
+			    }
+
+                if (locale == defaultLocale)
 				{
 					originalTab.DefaultLanguageGuid = localizedCopy.UniqueId;
 					UpdateTab(originalTab);
@@ -260,7 +249,10 @@ namespace DotNetNuke.Entities.Tabs
                 }
 
                 //Save Tab
-                AddTabInternal(localizedCopy, -1, -1, false); //not include modules show on all page, it will handled in copy modules action.
+                var afterTabId = insertAfterOriginal ? originalTab.TabID : -1;
+                const int beforeTabId = -1;
+                const bool includeAllModules = false;
+                AddTabInternal(localizedCopy, afterTabId, beforeTabId, includeAllModules); //not include modules show on all page, it will handled in copy modules action.
 
 				//if the tab has custom stylesheet defined, then also copy the stylesheet to the localized version.
 				if (originalTab.TabSettings.ContainsKey("CustomStylesheet"))
@@ -268,10 +260,10 @@ namespace DotNetNuke.Entities.Tabs
 					UpdateTabSetting(localizedCopy.TabID, "CustomStylesheet", originalTab.TabSettings["CustomStylesheet"].ToString());
 				}
 
-				/* Tab versioning and workflow is disabled 
+                /* Tab versioning and workflow is disabled 
 				 * during the creation of the Localized copy
 				 */
-				DisableTabVersioningAndWorkflow(localizedCopy);
+                DisableTabVersioningAndWorkflow(localizedCopy);
 
 				//Make shallow copies of all modules
 				ModuleController.Instance.CopyModules(originalTab, localizedCopy, true, allTabsModulesFromDefault);
@@ -417,7 +409,7 @@ namespace DotNetNuke.Entities.Tabs
                         }
                         else
                         {
-                            if (isAdminTemplate && roleName.ToLower() == "administrators")
+                            if (isAdminTemplate && roleName.ToLowerInvariant() == "administrators")
                             {
                                 roleID = portal.AdministratorRoleId;
                             }
@@ -899,7 +891,7 @@ namespace DotNetNuke.Entities.Tabs
                     // we are adding missing languages to a single culture page that is not in the default language
                     // so we must first add a page in the default culture
 
-                    CreateLocalizedCopyInternal(workingTab, defaultLocale, false, true);
+                    CreateLocalizedCopyInternal(workingTab, defaultLocale, false, true, insertAfterOriginal: true);
                 }
 
                 if (currentTab.DefaultLanguageTab != null)
@@ -918,7 +910,7 @@ namespace DotNetNuke.Entities.Tabs
                         }
                         if (missing)
                         {
-                            CreateLocalizedCopyInternal(workingTab, locale, false, true);
+                            CreateLocalizedCopyInternal(workingTab, locale, false, true, insertAfterOriginal: true);
                         }
                     }
                 }
@@ -1000,6 +992,16 @@ namespace DotNetNuke.Entities.Tabs
             DataCache.RemoveCache(DataCache.PortalDictionaryCacheKey);
 
             CacheController.FlushPageIndexFromCache();
+        }
+
+        public void RefreshCache(int portalId, int tabId)
+        {
+            var portalTabs = GetTabsByPortal(portalId);
+            if (portalTabs.WithTabId(tabId) != null)
+            {
+                var updateTab = GetTab(tabId, portalId, true);
+                portalTabs.RefreshCache(tabId, updateTab);
+            }
         }
 
         /// <summary>
@@ -2452,7 +2454,8 @@ namespace DotNetNuke.Entities.Tabs
                                  false,
                                  false,
                                  false,
-                                 false);
+                                 false,
+                                 true);
         }
 
         /// <summary>
@@ -2476,7 +2479,8 @@ namespace DotNetNuke.Entities.Tabs
                                  includeDeleted,
                                  includeURL,
                                  false,
-                                 false);
+                                 false,
+                                 true);
         }
 
         /// <summary>
@@ -2504,7 +2508,8 @@ namespace DotNetNuke.Entities.Tabs
                                  includeDeleted,
                                  includeURL,
                                  checkViewPermisison,
-                                 checkEditPermission);
+                                 checkEditPermission,
+                                 true);
         }
 
         /// <summary>
@@ -2523,6 +2528,45 @@ namespace DotNetNuke.Entities.Tabs
         public static List<TabInfo> GetPortalTabs(List<TabInfo> tabs, int excludeTabId, bool includeNoneSpecified,
                                                   string noneSpecifiedText, bool includeHidden, bool includeDeleted, bool includeURL,
                                                   bool checkViewPermisison, bool checkEditPermission)
+        {
+            return GetPortalTabs(
+                tabs,
+                excludeTabId,
+                includeNoneSpecified,
+                noneSpecifiedText,
+                includeHidden,
+                includeDeleted,
+                includeURL,
+                checkViewPermisison,
+                checkEditPermission,
+                true);
+        }
+
+        /// <summary>
+        /// Gets the portal tabs.
+        /// </summary>
+        /// <param name="tabs">The tabs.</param>
+        /// <param name="excludeTabId">The exclude tab id.</param>
+        /// <param name="includeNoneSpecified">if set to <c>true</c> [include none specified].</param>
+        /// <param name="noneSpecifiedText">The none specified text.</param>
+        /// <param name="includeHidden">if set to <c>true</c> [include hidden].</param>
+        /// <param name="includeDeleted">if set to <c>true</c> [include deleted].</param>
+        /// <param name="includeURL">if set to <c>true</c> [include URL].</param>
+        /// <param name="checkViewPermisison">if set to <c>true</c> [check view permisison].</param>
+        /// <param name="checkEditPermission">if set to <c>true</c> [check edit permission].</param>
+        /// <param name="includeDeletedChildren">The value of this parameter affects <see cref="TabInfo.HasChildren"></see> property.</param>
+        /// <returns></returns>
+        public static List<TabInfo> GetPortalTabs(
+            List<TabInfo> tabs,
+            int excludeTabId,
+            bool includeNoneSpecified,
+            string noneSpecifiedText,
+            bool includeHidden,
+            bool includeDeleted,
+            bool includeURL,
+            bool checkViewPermisison,
+            bool checkEditPermission,
+            bool includeDeletedChildren)
         {
             var listTabs = new List<TabInfo>();
             if (includeNoneSpecified)
@@ -2559,6 +2603,9 @@ namespace DotNetNuke.Entities.Tabs
                             listTabs.Add(tab);
                         }
                     }
+
+                    // HasChildren should be true in case there is at least one not deleted child
+                    tab.HasChildren = tab.HasChildren && (includeDeletedChildren || GetTabsByParent(tab.TabID, tab.PortalID).Any(a => !a.IsDeleted));
                 }
             }
             return listTabs;
@@ -2847,6 +2894,18 @@ namespace DotNetNuke.Entities.Tabs
                 {
                     newnode = tabXml.CreateElement("tabtype");
                     newnode.InnerXml = "500tab";
+                    tabNode.AppendChild(newnode);
+                }
+                else if (tab.TabID == portal.TermsTabId)
+                {
+                    newnode = tabXml.CreateElement("tabtype");
+                    newnode.InnerXml = "termstab";
+                    tabNode.AppendChild(newnode);
+                }
+                else if (tab.TabID == portal.PrivacyTabId)
+                {
+                    newnode = tabXml.CreateElement("tabtype");
+                    newnode.InnerXml = "privacytab";
                     tabNode.AppendChild(newnode);
                 }
             }

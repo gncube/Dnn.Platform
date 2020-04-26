@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -51,7 +55,7 @@ namespace log4net.Config
 	/// <author>Gert Driesen</author>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	[Serializable]
-	[Obsolete("Use XmlConfiguratorAttribute instead of DOMConfiguratorAttribute")]
+	[Obsolete("Use XmlConfiguratorAttribute instead of DOMConfiguratorAttribute. Scheduled removal in v10.0.0.")]
 	public sealed class DOMConfiguratorAttribute : XmlConfiguratorAttribute
 	{
 	}

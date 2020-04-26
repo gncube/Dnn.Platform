@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -45,7 +29,9 @@ using DotNetNuke.Services.Log.EventLog;
 using DotNetNuke.Services.ModuleCache;
 using DotNetNuke.UI.Utilities;
 using DotNetNuke.UI.WebControls;
+using DotNetNuke.Web.Client;
 using DotNetNuke.Web.Client.ClientResourceManagement;
+using Microsoft.Extensions.DependencyInjection;
 using Globals = DotNetNuke.Common.Globals;
 
 #endregion
@@ -64,14 +50,17 @@ namespace DotNetNuke.UI.Modules
     {
     	private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof (ModuleHost));
 
-        private static readonly Regex CdfMatchRegex = new Regex(@"<\!--CDF\((JAVASCRIPT|CSS|JS-LIBRARY)\|(.+?)\)-->",
+        private static readonly Regex CdfMatchRegex = new Regex(@"<\!--CDF\((?<type>JAVASCRIPT|CSS|JS-LIBRARY)\|(?<path>.+?)(\|(?<provider>.+?)\|(?<priority>\d+?))?\)-->",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private const string DefaultCssProvider = "DnnPageHeaderProvider";
+        private const string DefaultJsProvider = "DnnBodyProvider";
 
         #region Private Members
 
         private readonly ModuleInfo _moduleConfiguration;
         private Control _control;
         private bool _isCached;
+        private readonly IModuleControlPipeline _moduleControlPipeline = Globals.DependencyProvider.GetRequiredService<IModuleControlPipeline>();
 
         #endregion
 
@@ -208,7 +197,7 @@ namespace DotNetNuke.UI.Modules
             var content = PortalSettings.UserMode != PortalSettings.Mode.Layout;
             if (Page.Request.QueryString["content"] != null)
             {
-                switch (Page.Request.QueryString["Content"].ToLower())
+                switch (Page.Request.QueryString["Content"].ToLowerInvariant())
                 {
                     case "1":
                     case "true":
@@ -276,12 +265,12 @@ namespace DotNetNuke.UI.Modules
                     if (!_isCached)
                     {
                     	// load the control dynamically
-                        _control = ModuleControlFactory.LoadModuleControl(Page, _moduleConfiguration);
+                        _control = _moduleControlPipeline.LoadModuleControl(Page, _moduleConfiguration);
                     }
                 }
                 else //content placeholder
                 {
-                    _control = ModuleControlFactory.CreateModuleControl(_moduleConfiguration);
+                    _control = _moduleControlPipeline.CreateModuleControl(_moduleConfiguration);
                 }
                 if (Skin != null)
                 {
@@ -304,7 +293,7 @@ namespace DotNetNuke.UI.Modules
                 Logger.Error(exc);
 				
 				//add module settings
-                _control = ModuleControlFactory.CreateModuleControl(_moduleConfiguration);
+                _control = _moduleControlPipeline.CreateModuleControl(_moduleConfiguration);
                 ModuleControl.ModuleContext.Configuration = _moduleConfiguration;
                 if (TabPermissionController.CanAdminPage())
                 {
@@ -412,7 +401,7 @@ namespace DotNetNuke.UI.Modules
             if (success)
             {
                 this.RestoreCachedClientResourceRegistrations(cachedContent);
-                _control = ModuleControlFactory.CreateCachedControl(cachedContent, _moduleConfiguration);
+                _control = _moduleControlPipeline.CreateCachedControl(cachedContent, _moduleConfiguration);
                 Controls.Add(_control);
             }
             return success;
@@ -435,16 +424,51 @@ namespace DotNetNuke.UI.Modules
             foreach (Match match in matches)
             {
                 cachedContent = cachedContent.Replace(match.Value, string.Empty);
-                switch (match.Groups[1].Value.ToUpperInvariant())
+                var dependencyType = match.Groups["type"].Value.ToUpperInvariant();
+                var filePath = match.Groups["path"].Value;
+                var forceProvider = string.Empty;
+                var priority = Null.NullInteger;
+
+                if (match.Groups["provider"].Success)
+                {
+                    forceProvider = match.Groups["provider"].Value;
+                }
+
+                if (match.Groups["priority"].Success)
+                {
+                    priority = Convert.ToInt32(match.Groups["priority"].Value);
+                }
+
+                switch (dependencyType)
                 {
                     case "JAVASCRIPT":
-                        ClientResourceManager.RegisterScript(this.Page, match.Groups[2].Value);
+                        if (string.IsNullOrEmpty(forceProvider))
+                        {
+                            forceProvider = DefaultJsProvider;
+                        }
+
+                        if (priority == Null.NullInteger)
+                        {
+                            priority = (int)FileOrder.Js.DefaultPriority;
+                        }
+
+                        ClientResourceManager.RegisterScript(Page, filePath, priority, forceProvider);
                         break;
                     case "CSS":
-                        ClientResourceManager.RegisterStyleSheet(this.Page, match.Groups[2].Value);
+                        if (string.IsNullOrEmpty(forceProvider))
+                        {
+                            forceProvider = DefaultCssProvider;
+                        }
+
+                        if (priority == Null.NullInteger)
+                        {
+                            priority = (int)FileOrder.Css.DefaultPriority;
+                        }
+
+                        ClientResourceManager.RegisterStyleSheet(Page, filePath, priority, forceProvider);
                         break;
                     case "JS-LIBRARY":
-                        var args = match.Groups[2].Value.Split(new[] { ',', }, StringSplitOptions.None);
+                        var args = filePath.Split(new[] { ',', }, StringSplitOptions.None);
                         if (string.IsNullOrEmpty(args[1]))
                         {
                             JavaScript.RequestRegistration(args[0]);

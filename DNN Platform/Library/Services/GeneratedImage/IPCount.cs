@@ -1,4 +1,8 @@
-﻿using DotNetNuke.Common.Utils;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using DotNetNuke.Common.Utils;
 using DotNetNuke.Services.UserRequest;
 using System;
 using System.Collections.Generic;
@@ -104,7 +108,7 @@ namespace DotNetNuke.Services.GeneratedImage
                         var toTryDeleteAgain = new List<FileInfo>();
                         foreach (var fileinfo in files)
                         {
-                            if (fileinfo.Name.ToLower() != "_lastpurge" && fileinfo.LastWriteTime < threshold)
+                            if (fileinfo.Name.ToLowerInvariant() != "_lastpurge" && fileinfo.LastWriteTime < threshold)
                             {
                                 try
                                 {
@@ -166,7 +170,7 @@ namespace DotNetNuke.Services.GeneratedImage
         /// method to get Client ip address
         /// </summary>
         /// <returns>IP Address of visitor</returns>
-        [Obsolete("Deprecated in 9.2.0. Use UserRequestIPAddressController.Instance.GetUserRequestIPAddress")]
+        [Obsolete("Deprecated in 9.2.0. Use UserRequestIPAddressController.Instance.GetUserRequestIPAddress. Scheduled removal in v11.0.0.")]
         public static string GetVisitorIPAddress(HttpContextBase context)
         {
             return UserRequestIPAddressController.Instance.GetUserRequestIPAddress(context.Request);            

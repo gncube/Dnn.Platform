@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -113,7 +117,7 @@ namespace log4net.Appender
 		/// Obsolete constructor.
 		/// </para>
 		/// </remarks>
-		[Obsolete("Instead use the default constructor and set the Layout property")]
+		[Obsolete("Instead use the default constructor and set the Layout property. Scheduled removal in v10.0.0.")]
 		public EventLogAppender(ILayout layout) : this()
 		{
 			Layout = layout;

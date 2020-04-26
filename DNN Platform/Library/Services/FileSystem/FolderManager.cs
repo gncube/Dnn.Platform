@@ -1,24 +1,7 @@
-﻿#region Copyright
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -190,7 +173,7 @@ namespace DotNetNuke.Services.FileSystem
 
             if (DirectoryWrapper.Instance.Exists(folder.PhysicalPath))
             {
-                DirectoryWrapper.Instance.Delete(folder.PhysicalPath, false);
+                DirectoryWrapper.Instance.Delete(folder.PhysicalPath, true);
             }
             DeleteFolder(folder.PortalID, folder.FolderPath);
 
@@ -211,7 +194,8 @@ namespace DotNetNuke.Services.FileSystem
 
         private IEnumerable<IFileInfo> SearchFiles(IFolderInfo folder, Regex regex, bool recursive)
         {
-            var fileCollection = CBO.Instance.FillCollection<FileInfo>(DataProvider.Instance().GetFiles(folder.FolderID));
+            var fileCollection =
+                CBO.Instance.FillCollection<FileInfo>(DataProvider.Instance().GetFiles(folder.FolderID, false, false));
 
             var files = (from f in fileCollection where regex.IsMatch(f.FileName) select f).Cast<IFileInfo>().ToList();
 
@@ -465,6 +449,11 @@ namespace DotNetNuke.Services.FileSystem
                 throw new FolderAlreadyExistsException(Localization.Localization.GetExceptionMessage("AddFolderAlreadyExists", "The provided folder path already exists. The folder has not been added."));
             }
 
+            if (!IsValidFolderPath(folderPath))
+            {
+                throw new InvalidFolderPathException(Localization.Localization.GetExceptionMessage("AddFolderNotAllowed", "The folder path '{0}' is not allowed. The folder has not been added.", folderPath));
+            }
+
             var parentFolder = GetParentFolder(folderMapping.PortalID, folderPath);
             if (parentFolder != null)
             {
@@ -512,6 +501,12 @@ namespace DotNetNuke.Services.FileSystem
             OnFolderAdded(folder, GetCurrentUserId());
 
             return folder;
+        }
+
+        internal virtual bool IsValidFolderPath(string folderPath)
+        {
+            var illegalInFolderPath = new Regex(string.Format("[{0}]", Regex.Escape(new string(Path.GetInvalidPathChars()))), RegexOptions.Compiled);
+            return !illegalInFolderPath.IsMatch(folderPath) && !folderPath.TrimEnd('/', '\\').EndsWith(".");
         }
 
         /// <summary>
@@ -619,19 +614,7 @@ namespace DotNetNuke.Services.FileSystem
         {
             Requires.NotNull("folder", folder);
 
-            var fileCollection = CBO.Instance.FillCollection<FileInfo>(DataProvider.Instance().GetFiles(folder.FolderID, retrieveUnpublishedFiles));
-
-            var files = fileCollection.Cast<IFileInfo>().ToList();
-
-            if (recursive)
-            {
-                foreach (var subFolder in GetFolders(folder, true))
-                {
-                    files.AddRange(GetFiles(subFolder, false, retrieveUnpublishedFiles));
-                }
-            }
-
-            return files;
+            return CBO.Instance.FillCollection<FileInfo>(DataProvider.Instance().GetFiles(folder.FolderID, retrieveUnpublishedFiles, recursive));
         }
 
         /// <summary>
@@ -1282,7 +1265,7 @@ namespace DotNetNuke.Services.FileSystem
 
                 foreach (PermissionInfo permission in PermissionController.GetPermissionsByFolder())
                 {
-                    if (permission.PermissionKey.ToUpper() == "READ" || permission.PermissionKey.ToUpper() == "WRITE" || permission.PermissionKey.ToUpper() == "BROWSE")
+                    if (permission.PermissionKey.Equals("READ", StringComparison.InvariantCultureIgnoreCase) || permission.PermissionKey.Equals("WRITE", StringComparison.InvariantCultureIgnoreCase) || permission.PermissionKey.Equals("BROWSE", StringComparison.InvariantCultureIgnoreCase))
                     {
                         var folderPermission = new FolderPermissionInfo(permission)
                         {
@@ -1294,7 +1277,7 @@ namespace DotNetNuke.Services.FileSystem
 
                         folder.FolderPermissions.Add(folderPermission);
 
-                        if (permission.PermissionKey.ToUpper() == "READ")
+                        if (permission.PermissionKey.Equals("READ", StringComparison.InvariantCultureIgnoreCase))
                         {
                             AddAllUserReadPermission(folder, permission);
                         }
@@ -2256,7 +2239,7 @@ namespace DotNetNuke.Services.FileSystem
         /// <param name="newFolderPath">The new folder path.</param>
         /// <returns>The moved folder.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Deprecated in DNN 7.1.  It has been replaced by FolderManager.Instance.MoveFolder(IFolderInfo folder, IFolderInfo destinationFolder) ")]
+        [Obsolete("Deprecated in DNN 7.1.  It has been replaced by FolderManager.Instance.MoveFolder(IFolderInfo folder, IFolderInfo destinationFolder) . Scheduled removal in v10.0.0.")]
         public virtual IFolderInfo MoveFolder(IFolderInfo folder, string newFolderPath)
         {
             Requires.NotNull("folder", folder);

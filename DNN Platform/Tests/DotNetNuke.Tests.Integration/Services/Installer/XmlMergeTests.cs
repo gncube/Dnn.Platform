@@ -1,24 +1,7 @@
-﻿#region Copyright
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2013
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -483,6 +466,28 @@ namespace DotNetNuke.Tests.Integration.Services.Installer
             Assert.AreEqual(3, nodes.Count);
             
             Assert.True(merge.ConfigUpdateChangedNodes);
+        }
+
+        [Test]
+        public void ShouldPreserveEmptyNamespaceOnSave()
+        {
+            var targetDoc = ExecuteMerge();
+
+            var ns = new XmlNamespaceManager(targetDoc.NameTable);
+            ns.AddNamespace("ab", "urn:schemas-microsoft-com:asm.v1");
+
+            // removed the existing node, since it matched targetpath attribute
+            var nodesWithNamespace = targetDoc.SelectNodes("/configuration/runtime/ab:assemblyBinding/ab:dependentAssembly", ns);
+            Assert.AreEqual(0, nodesWithNamespace.Count);
+
+            // added a new node with xmlns=""
+            var nodesWithoutNamespace = targetDoc.SelectNodes("/configuration/runtime/ab:assemblyBinding/dependentAssembly", ns);
+            Assert.AreEqual(1, nodesWithoutNamespace.Count);
+
+            // non-namespaced node has newVersion from merge
+            var dependentAssembly = nodesWithoutNamespace[0];
+            var bindingRedirect = dependentAssembly.SelectSingleNode("bindingRedirect", ns);
+            Assert.AreEqual("4.1.0.0", bindingRedirect.Attributes["newVersion"].Value);
         }
 
 // ReSharper restore PossibleNullReferenceException

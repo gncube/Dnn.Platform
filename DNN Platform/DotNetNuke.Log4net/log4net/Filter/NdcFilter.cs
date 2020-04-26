@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -41,7 +45,7 @@ namespace log4net.Filter
 	/// </remarks>
 	/// <author>Nicko Cadell</author>
 	/// <author>Gert Driesen</author>
-	/*[Obsolete("NdcFilter has been replaced by PropertyFilter")]*/
+	[Obsolete("NdcFilter has been replaced by PropertyFilter. Scheduled removal in v10.0.0.")]
 	public class NdcFilter : PropertyFilter
 	{
 		/// <summary>

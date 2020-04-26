@@ -1,8 +1,7 @@
-﻿// DotNetNuke® - http://www.dnnsoftware.com
-//
-// Copyright (c) 2002-2018, DNN Corp.
-// All rights reserved.
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ namespace Dnn.AzureConnector.Components
     {
         #region Properties
         private static readonly DataProvider dataProvider = DataProvider.Instance();
-        private const string DefaultDisplayName = "Azure";
+        private const string DefaultDisplayName = "Azure Storage";
 
         public string Name
         {
@@ -213,6 +212,10 @@ namespace Dnn.AzureConnector.Components
                    DisplayName != DefaultDisplayName)
                 {
                     folderMapping.MappingName = DisplayName;
+                }
+                if (!folderMapping.FolderMappingSettings.ContainsKey(Constants.SyncBatchSize))
+                {
+                    folderMapping.FolderMappingSettings[Constants.SyncBatchSize] = Constants.DefaultSyncBatchSize.ToString();
                 }
 
                 FolderMappingController.Instance.UpdateFolderMapping(folderMapping);

@@ -1,24 +1,7 @@
-﻿#region Copyright
-//
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions
-// of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens;
@@ -164,7 +147,6 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
                 UserId = userInfo.UserID,
                 TokenExpiry = now.AddMinutes(SessionTokenTtl),
                 RenewalExpiry = now.AddDays(RenewalTokenTtl),
-                //TokenHash = GetHashedStr(accessToken), -- not computed yet
                 RenewalHash = GetHashedStr(renewalToken),
             };
 
@@ -224,16 +206,28 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
                 return EmptyWithError("not-more-renewal");
             }
 
+            if (ptoken.RenewalHash != GetHashedStr(renewalToken))
+            {
+                if (Logger.IsTraceEnabled) Logger.Trace("Invalid renewal token");
+                return EmptyWithError("bad-token");
+            }
+
+            if (ptoken.TokenHash != GetHashedStr(rawToken))
+            {
+                if (Logger.IsTraceEnabled) Logger.Trace("Invalid access token");
+                return EmptyWithError("bad-token");
+            }
+
             var userInfo = TryGetUser(jwt, false);
             if (userInfo == null)
             {
-                if (Logger.IsTraceEnabled) Logger.Trace("Token not found in DB");
+                if (Logger.IsTraceEnabled) Logger.Trace("User not found in DB");
                 return EmptyWithError("not-found");
             }
 
-            if ((ptoken.TokenHash != GetHashedStr(rawToken)) || (ptoken.UserId != userInfo.UserID))
+            if ((ptoken.UserId != userInfo.UserID))
             {
-                if (Logger.IsTraceEnabled) Logger.Trace("Mismatch in received token");
+                if (Logger.IsTraceEnabled) Logger.Trace("Mismatch token and user");
                 return EmptyWithError("bad-token");
             }
 
@@ -254,7 +248,7 @@ namespace Dnn.AuthServices.Jwt.Components.Common.Controllers
             var secret = ObtainSecret(ptoken.TokenId, portalSettings.GUID, userInfo.Membership.LastPasswordChangeDate);
             var jwt = CreateJwtToken(secret, portalSettings.PortalAlias.HTTPAlias, ptoken, userInfo.Roles);
             var accessToken = jwt.RawData;
-            
+
             // save hash values in DB so no one with access can create JWT header from existing data
             ptoken.TokenHash = GetHashedStr(accessToken);
             DataProvider.UpdateToken(ptoken);

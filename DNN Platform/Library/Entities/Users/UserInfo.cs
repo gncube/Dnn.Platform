@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -31,6 +15,7 @@ using DotNetNuke.Entities.Portals;
 using DotNetNuke.Entities.Profile;
 using DotNetNuke.Entities.Users.Social;
 using DotNetNuke.Security;
+using DotNetNuke.Security.Membership;
 using DotNetNuke.Security.Roles;
 using DotNetNuke.Services.Tokens;
 using DotNetNuke.UI.WebControls;
@@ -129,6 +114,23 @@ namespace DotNetNuke.Entities.Users
         [Browsable(false)]
         public bool IsSuperUser { get; set; }
 
+
+        /// <summary>
+        /// Gets whether the user is in the portal's administrators role
+        /// </summary>
+        public bool IsAdmin
+        {
+            get
+            {
+                if (IsSuperUser)
+                {
+                    return true;
+                }
+                PortalInfo ps = PortalController.Instance.GetPortal(PortalID);
+                return ps != null && IsInRole(ps.AdministratorRoleName);
+            }
+        }
+
         /// -----------------------------------------------------------------------------
         /// <summary>
         /// Gets and sets the Last IP address used by user
@@ -195,6 +197,30 @@ namespace DotNetNuke.Entities.Users
 
         /// -----------------------------------------------------------------------------
         /// <summary>
+        /// Gets and sets whether the user has agreed to the terms and conditions
+        /// </summary>
+        /// -----------------------------------------------------------------------------
+        [Browsable(false)]
+        public bool HasAgreedToTerms { get; set; }
+
+        /// -----------------------------------------------------------------------------
+        /// <summary>
+        /// Gets and sets when the user last agreed to the terms and conditions
+        /// </summary>
+        /// -----------------------------------------------------------------------------
+        [Browsable(false)]
+        public DateTime HasAgreedToTermsOn { get; set; }
+
+        /// -----------------------------------------------------------------------------
+        /// <summary>
+        /// Gets and sets whether the user has requested they be removed from the site
+        /// </summary>
+        /// -----------------------------------------------------------------------------
+        [Browsable(false)]
+        public bool RequestsRemoval { get; set; }
+
+        /// -----------------------------------------------------------------------------
+        /// <summary>
         /// Gets and sets the Profile Object
         /// </summary>
         /// -----------------------------------------------------------------------------
@@ -229,7 +255,7 @@ namespace DotNetNuke.Entities.Users
                             (r.EffectiveDate < DateTime.Now || Null.IsNull(r.EffectiveDate)) &&
                             (r.ExpiryDate > DateTime.Now || Null.IsNull(r.ExpiryDate))
                         select r.RoleName
-                        ).ToArray();    
+                        ).ToArray();
             }
             set { }
         }
@@ -295,7 +321,7 @@ namespace DotNetNuke.Entities.Users
                 internScope = currentScope; //admins and user himself can access all data
             }
             string outputFormat = format == string.Empty ? "g" : format;
-            switch (propertyName.ToLower())
+            switch (propertyName.ToLowerInvariant())
             {
                 case "verificationcode":
                     if (internScope < Scope.SystemMessages)
@@ -304,7 +330,7 @@ namespace DotNetNuke.Entities.Users
                         return PropertyAccess.ContentLocked;
                     }
                     var ps = PortalSecurity.Instance;
-                    var code = ps.Encrypt(Config.GetDecryptionkey(), PortalID + "-" + UserID);
+                    var code = ps.Encrypt(Config.GetDecryptionkey(), PortalID + "-" + GetMembershipUserId());
                     return code.Replace("+", ".").Replace("/", "-").Replace("=", "_");
                 case "affiliateid":
                     if (internScope < Scope.SystemMessages)
@@ -420,6 +446,11 @@ namespace DotNetNuke.Entities.Users
                 _administratorRoleName = ps.AdministratorRoleName;
             }
             return accessingUser.IsInRole(_administratorRoleName) || accessingUser.IsSuperUser;
+        }
+
+        private string GetMembershipUserId()
+        {
+            return MembershipProvider.Instance().GetProviderUserKey(this)?.Replace("-", string.Empty) ?? string.Empty;
         }
 
         #endregion

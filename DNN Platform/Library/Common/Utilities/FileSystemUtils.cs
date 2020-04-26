@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -200,7 +184,7 @@ namespace DotNetNuke.Common.Utilities
             try
             {
 				//Open File Stream
-                fs = File.OpenRead(filePath.Replace("/", "\\"));
+                fs = File.OpenRead(FixPath(filePath));
 				
 				//Read file into byte array buffer
                 var buffer = new byte[fs.Length];
@@ -234,7 +218,7 @@ namespace DotNetNuke.Common.Utilities
 
         /// -----------------------------------------------------------------------------
         /// <summary>
-        /// Trys to copy a file in the file system
+        /// Tries to copy a file in the file system
         /// </summary>
         /// <param name="sourceFileName">The name of the source file</param>
         /// <param name="destFileName">The name of the destination file</param>
@@ -253,16 +237,17 @@ namespace DotNetNuke.Common.Utilities
         /// Deletes file in areas with a high degree of concurrent file access (i.e. caching, logging) 
         /// This solves file concurrency issues under heavy load.
         /// </summary>
-        /// <param name="filename">String</param>
+        /// <param name="fileName">String</param>
         /// <param name="waitInMilliseconds">Int16</param>
         /// <param name="maxAttempts">Int16</param>
         /// <returns>Boolean</returns>
         /// <remarks>
         /// </remarks>
         /// -----------------------------------------------------------------------------
-        public static bool DeleteFileWithWait(string filename, Int16 waitInMilliseconds, Int16 maxAttempts)
+        public static bool DeleteFileWithWait(string fileName, Int16 waitInMilliseconds, Int16 maxAttempts)
         {
-            if (!File.Exists(filename))
+            fileName = FixPath(fileName);
+            if (!File.Exists(fileName))
             {
                 return true;
             }
@@ -277,9 +262,9 @@ namespace DotNetNuke.Common.Utilities
                 i = i + 1;
                 try
                 {
-                    if (File.Exists(filename))
+                    if (File.Exists(fileName))
                     {
-                        File.Delete(filename);
+                        File.Delete(fileName);
                     }
                     fileDeleted = true; //we don't care if it didn't exist...the operation didn't fail, that's what we care about
                 }
@@ -298,15 +283,15 @@ namespace DotNetNuke.Common.Utilities
 
         /// -----------------------------------------------------------------------------
         /// <summary>
-        /// Trys to delete a file from the file system
+        /// Tries to delete a file from the file system
         /// </summary>
 		/// <param name="fileName">The name of the file</param>
         /// -----------------------------------------------------------------------------
         public static void DeleteFile(string fileName)
         {
+            fileName = FixPath(fileName);
             if (File.Exists(fileName))
             {
-                fileName = fileName.Replace('/', '\\');
                 File.SetAttributes(fileName, FileAttributes.Normal);
                 File.Delete(fileName);
             }
@@ -339,6 +324,7 @@ namespace DotNetNuke.Common.Utilities
                 var zipEntry = zipStream.GetNextEntry();
                 while (zipEntry != null)
                 {
+                    zipEntry.CheckZipEntry();
                     HtmlUtils.WriteKeepAlive();
                     var localFileName = zipEntry.Name;
                     var relativeDir = Path.GetDirectoryName(zipEntry.Name);
@@ -348,7 +334,7 @@ namespace DotNetNuke.Common.Utilities
                     }
                     if (!zipEntry.IsDirectory && (!string.IsNullOrEmpty(localFileName)))
                     {
-                        var fileNamePath = Path.Combine(destPath, localFileName).Replace("/", "\\");
+                        var fileNamePath = FixPath(Path.Combine(destPath, localFileName));
                         try
                         {
                             if (File.Exists(fileNamePath))
@@ -410,7 +396,7 @@ namespace DotNetNuke.Common.Utilities
                     strPath = strPath.Substring(0, pos);
                 }
 
-                strPath = strPath.Trim().Replace("/", "\\").TrimStart('\\');
+                strPath = FixPath(strPath).TrimStart('\\');
                 if (!string.IsNullOrEmpty(strPath))
                 {
                     strPath = Path.Combine(Globals.ApplicationMapPath, strPath);
@@ -457,6 +443,7 @@ namespace DotNetNuke.Common.Utilities
         {
             if (!String.IsNullOrEmpty(strRoot))
             {
+                strRoot = FixPath(strRoot);
                 if (Directory.Exists(strRoot))
                 {
                     foreach (string strFolder in Directory.EnumerateDirectoryPaths(strRoot))
@@ -467,7 +454,7 @@ namespace DotNetNuke.Common.Utilities
                             DeleteFilesRecursive(strFolder, filter);
                         }
                     }
-                    foreach (string strFile in Directory.EnumerateFilePaths(new DirectoryInfo(strRoot)).Where(f => f.Contains(filter)))
+                    foreach (string strFile in Directory.EnumerateFilePaths(strRoot).Where(f => f.Contains(filter)))
                     {
                         try
                         {
@@ -484,8 +471,8 @@ namespace DotNetNuke.Common.Utilities
 
         public static void DeleteFolderRecursive(string strRoot)
         {
-            strRoot = strRoot.Replace("/", "\\");
-            if (string.IsNullOrEmpty(strRoot) || !Directory.Exists(strRoot.Trim()))
+            strRoot = FixPath(strRoot);
+            if (string.IsNullOrEmpty(strRoot) || !Directory.Exists(strRoot))
             {   Logger.Info(strRoot + " does not exist. ");
                 return;
             }
@@ -495,7 +482,7 @@ namespace DotNetNuke.Common.Utilities
                 DeleteFolderRecursive(strFolder);
             }
 
-            foreach (string strFile in Directory.EnumerateFilePaths(new DirectoryInfo(strRoot)))
+            foreach (string strFile in Directory.EnumerateFilePaths(strRoot))
             {
                 try
                 {
@@ -520,5 +507,14 @@ namespace DotNetNuke.Common.Utilities
             }
         }
 
+        public static string FixPath(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            return input.Trim().Replace("/", "\\");
+        }
     }
 }

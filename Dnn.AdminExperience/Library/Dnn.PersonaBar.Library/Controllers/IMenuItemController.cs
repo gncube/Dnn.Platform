@@ -1,0 +1,32 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System.Collections.Generic;
+using Dnn.PersonaBar.Library.Model;
+
+namespace Dnn.PersonaBar.Library.Controllers
+{
+    public interface IMenuItemController
+    {
+        /// <summary>
+        /// Update menu item parameters.
+        /// </summary>
+        /// <param name="menuItem"></param>
+        void UpdateParameters(MenuItem menuItem);
+
+        /// <summary>
+        /// whether the menu item visible in current context.
+        /// </summary>
+        /// <param name="menuItem"></param>
+        /// <returns></returns>
+        bool Visible(MenuItem menuItem);
+
+        /// <summary>
+        /// get menu settings.
+        /// </summary>
+        /// <param name="menuItem"></param>
+        /// <returns></returns>
+        IDictionary<string, object> GetSettings(MenuItem menuItem);
+    }
+}

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +21,7 @@ namespace DotNetNuke.Collections
         #region Constructors
 
         /// <summary>
-        /// Constructs a new PageSelector for use on the specified data store
+        /// Initializes a new instance of the <see cref="PageSelector{T}"/> for use on the specified data store 
         /// </summary>
         /// <param name = "source">The data store to page</param>
         /// <param name = "pageSize">The size of each page</param>

@@ -1,26 +1,7 @@
-﻿#region Copyright
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
-#endregion
-
 #region Usings
 
 using System;
@@ -196,7 +177,7 @@ namespace DotNetNuke.HttpModules.UrlRewrite
                             //if the TabId is not for the correct domain
                             //see if the correct domain can be found and redirect it 
                             portalAliasInfo = PortalAliasController.Instance.GetPortalAlias(domainName);
-                            if (portalAliasInfo != null && !request.Url.LocalPath.ToLower().EndsWith("/linkclick.aspx"))
+                            if (portalAliasInfo != null && !request.Url.LocalPath.ToLowerInvariant().EndsWith("/linkclick.aspx"))
                             {
                                 if (app.Request.Url.AbsoluteUri.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
                                 {
@@ -321,7 +302,7 @@ namespace DotNetNuke.HttpModules.UrlRewrite
                     {
                         //if page is secure and connection is not secure orelse ssloffload is enabled and server value exists
                         if ((portalSettings.ActiveTab.IsSecure && !request.IsSecureConnection) &&
-                            (IsSSLOffloadEnabled(request) == false))
+                            (UrlUtils.IsSslOffloadEnabled(request) == false))
                         {
                             //switch to secure connection
                             strURL = requestedPath.Replace("http://", "https://");
@@ -591,7 +572,7 @@ namespace DotNetNuke.HttpModules.UrlRewrite
                             tabPath = url.Remove(0, myAlias.Length);
                         }
                         //Default Page has been Requested
-                        if ((tabPath == "/" + Globals.glbDefaultPage.ToLower()))
+                        if ((tabPath == "/" + Globals.glbDefaultPage.ToLowerInvariant()))
                         {
                             return;
                         }
@@ -648,7 +629,7 @@ namespace DotNetNuke.HttpModules.UrlRewrite
                             RewriterUtils.RewriteUrl(app.Context, sendToUrl);
                             return;
                         }
-                        tabPath = tabPath.ToLower();
+                        tabPath = tabPath.ToLowerInvariant();
                         if ((tabPath.IndexOf('?') != -1))
                         {
                             tabPath = tabPath.Substring(0, tabPath.IndexOf('?'));
@@ -772,7 +753,7 @@ namespace DotNetNuke.HttpModules.UrlRewrite
                         TabCollection objTabs = TabController.Instance.GetTabsByPortal(tabPath.StartsWith("//host") ? Null.NullInteger : portalID);
                         foreach (KeyValuePair<int, TabInfo> kvp in objTabs)
                         {
-                            if ((kvp.Value.IsDeleted == false && kvp.Value.TabPath.ToLower() == tabPath))
+                            if ((kvp.Value.IsDeleted == false && kvp.Value.TabPath.ToLowerInvariant() == tabPath))
                             {
                                 if ((!String.IsNullOrEmpty(app.Request.Url.Query)))
                                 {
@@ -791,23 +772,6 @@ namespace DotNetNuke.HttpModules.UrlRewrite
                     }
                 }
             }
-        }
-
-
-        private bool IsSSLOffloadEnabled(HttpRequest request)
-        {
-            string ssloffloadheader = HostController.Instance.GetString("SSLOffloadHeader", "");
-            //if the ssloffloadheader variable has been set check to see if a request header with that type exists
-            if (!string.IsNullOrEmpty(ssloffloadheader))
-            {
-                string ssloffload = request.Headers[ssloffloadheader];
-                if (!string.IsNullOrEmpty(ssloffload))
-                {
-                    return true;
-                }
-                return false;
-            }
-            return false;
         }
 
         #endregion

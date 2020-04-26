@@ -1,23 +1,7 @@
-﻿#region Copyright
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
-
 using System.Text.RegularExpressions;
 
 namespace DotNetNuke.Services.Social.Messaging.Scheduler
@@ -398,7 +382,6 @@ namespace DotNetNuke.Services.Social.Messaging.Scheduler
         {
             var cacheKey = string.Format("MessageTab:{0}", sendingPortal.PortalId);
             
-            // TODO: Create Default Const cache timeout
             var cacheItemArgs = new CacheItemArgs(cacheKey, 30, CacheItemPriority.Default, sendingPortal);
 
             return CBO.GetCachedObject<int>(cacheItemArgs, GetMessageTabCallback);
@@ -668,7 +651,6 @@ namespace DotNetNuke.Services.Social.Messaging.Scheduler
         /// <param name="messageRecipient">The message recipient.</param>
         private void SendMessage(MessageRecipient messageRecipient)
         {
-            // todo: check if host user can send to multiple portals...
             var message = InternalMessagingController.Instance.GetMessage(messageRecipient.MessageID);            
 
             var toUser = UserController.Instance.GetUser(message.PortalID, messageRecipient.UserID);

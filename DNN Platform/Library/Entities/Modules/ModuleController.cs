@@ -1,23 +1,7 @@
-#region Copyright
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -38,6 +22,7 @@ using DotNetNuke.Data;
 using DotNetNuke.Entities.Content;
 using DotNetNuke.Entities.Content.Common;
 using DotNetNuke.Entities.Content.Taxonomy;
+using DotNetNuke.Entities.Controllers;
 using DotNetNuke.Entities.Modules.Actions;
 using DotNetNuke.Entities.Modules.Definitions;
 using DotNetNuke.Entities.Portals;
@@ -250,6 +235,90 @@ namespace DotNetNuke.Entities.Modules
             }
         }
 
+        /// <summary>
+        /// Checks whether module VIEW permission is inherited from its tab
+        /// </summary> 
+        /// <param name="module">The module</param>
+        /// <param name="permission">The module permission.</param>
+        private bool IsModuleViewPermissionInherited(ModuleInfo module, ModulePermissionInfo permission)
+        {
+            Requires.NotNull(module);
+
+            Requires.NotNull(permission);
+
+            var permissionViewKey = "VIEW";
+
+            if (!module.InheritViewPermissions || permission.PermissionKey != permissionViewKey)
+            {
+                return false;
+            }
+
+            var tabPermissions = TabPermissionController.GetTabPermissions(module.TabID, module.PortalID);
+            
+            return tabPermissions?.Where(x => x.RoleID == permission.RoleID && x.PermissionKey == permissionViewKey).Any() == true;
+        }
+
+        /// <summary>
+        /// Checks whether given permission is granted for translator role
+        /// </summary>
+        /// <param name="permission">The module permission.</param>
+        /// <param name="portalId">The portal ID.</param>
+        /// <param name="culture">The culture code.</param>
+        private bool IsTranslatorRolePermission(ModulePermissionInfo permission, int portalId, string culture)
+        {
+            Requires.NotNull(permission);
+
+            if (string.IsNullOrWhiteSpace(culture) || portalId == Null.NullInteger)
+            {
+                return false;
+            }
+
+            var translatorSettingKey = $"DefaultTranslatorRoles-{ culture }";
+
+            var translatorSettingValue = 
+                PortalController.GetPortalSetting(translatorSettingKey, portalId, null) ?? 
+                HostController.Instance.GetString(translatorSettingKey, null);
+
+            var translatorRoles =
+                translatorSettingValue?.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            return translatorRoles?.Any(r => r.Equals(permission.RoleName, StringComparison.OrdinalIgnoreCase)) == true;
+        }
+
+        /// <summary>
+        /// Copies permissions from source to new tab
+        /// </summary>
+        /// <param name="sourceModule">Source module.</param>
+        /// <param name="newModule">New module.</param>
+        private void CopyModulePermisions(ModuleInfo sourceModule, ModuleInfo newModule)
+        {
+            Requires.NotNull(sourceModule);
+
+            Requires.NotNull(newModule);
+
+            foreach (ModulePermissionInfo permission in sourceModule.ModulePermissions)
+            {
+                // skip inherited view and translator permissions
+                if (IsModuleViewPermissionInherited(newModule, permission) ||
+                    IsTranslatorRolePermission(permission, sourceModule.PortalID, sourceModule.CultureCode))
+                {
+                    continue;
+                }
+
+                // need to force vew permission to be copied 
+                permission.PermissionKey = newModule.InheritViewPermissions && permission.PermissionKey == "VIEW" ?
+                    null :
+                    permission.PermissionKey;
+
+                AddModulePermission(
+                    newModule,
+                    permission,
+                    permission.RoleID,
+                    permission.UserID,
+                    permission.AllowAccess);
+            }
+        }
+
         private static ModuleInfo DeserializeModule(XmlNode nodeModule, XmlNode nodePane, int portalId, int tabId, int moduleDefId)
         {
             //Create New Module
@@ -428,8 +497,6 @@ namespace DotNetNuke.Entities.Modules
                 {
                     var portal = PortalController.Instance.GetPortal(PortalId);
 
-                    content = HttpContext.Current.Server.HtmlDecode(content);
-
                     //Determine if the Module is copmpletely installed 
                     //(ie are we running in the same request that installed the module).
                     if (module.DesktopModule.SupportedFeatures == Null.NullInteger)
@@ -449,7 +516,8 @@ namespace DotNetNuke.Entities.Modules
                                 var controller = businessController as IPortable;
                                 if (controller != null)
                                 {
-                                    controller.ImportModule(module.ModuleID, content, version, portal.AdministratorId);
+                                    var decodedContent = HttpContext.Current.Server.HtmlDecode(content);
+                                    controller.ImportModule(module.ModuleID, decodedContent, version, portal.AdministratorId);
                                 }
                             }
                             catch
@@ -615,6 +683,9 @@ namespace DotNetNuke.Entities.Modules
                     }
                 }
 
+                // copy permisions from source to new module
+                CopyModulePermisions(sourceModule, newModule);
+
                 //Add Module
                 AddModuleInternal(newModule);
 
@@ -726,30 +797,28 @@ namespace DotNetNuke.Entities.Modules
                 var currentUser = UserController.Instance.GetCurrentUserInfo();
                 dr = dataProvider.GetModuleSetting(moduleId, settingName);
 
-	            var settingExist = false;
 	            string existValue = null;
                 if (dr.Read())
                 {
-					settingExist = true;
 	                existValue = dr.GetString(1);
                 }
 
 				dr.Close();
 
-				if (existValue != settingValue)
-	            {
-					dataProvider.UpdateModuleSetting(moduleId, settingName, settingValue, currentUser.UserID);
-					EventLogController.AddSettingLog(EventLogController.EventLogType.MODULE_SETTING_UPDATED,
-														"ModuleId", moduleId, settingName, settingValue,
-														currentUser.UserID);
-				}
-				else if (!settingExist)
-				{
-					dataProvider.UpdateModuleSetting(moduleId, settingName, settingValue, currentUser.UserID);
-					EventLogController.AddSettingLog(EventLogController.EventLogType.MODULE_SETTING_CREATED,
-													"ModuleId", moduleId, settingName, settingValue,
-													currentUser.UserID);
-				}
+                if (existValue == null)
+                {
+                    dataProvider.UpdateModuleSetting(moduleId, settingName, settingValue, currentUser.UserID);
+                    EventLogController.AddSettingLog(EventLogController.EventLogType.MODULE_SETTING_CREATED,
+                        "ModuleId", moduleId, settingName, settingValue,
+                        currentUser.UserID);
+                } 
+                else if (existValue != settingValue)
+                {
+                    dataProvider.UpdateModuleSetting(moduleId, settingName, settingValue, currentUser.UserID);
+                    EventLogController.AddSettingLog(EventLogController.EventLogType.MODULE_SETTING_UPDATED,
+                                                        "ModuleId", moduleId, settingName, settingValue,
+                                                        currentUser.UserID);
+                }
 
                 if (updateVersion)
                 {
@@ -1813,6 +1882,21 @@ namespace DotNetNuke.Entities.Modules
         {
             //Move the module to the Tab
             dataProvider.MoveTabModule(fromTabId, moduleId, toTabId, toPaneName, UserController.Instance.GetCurrentUserInfo().UserID);
+
+            //Update the Tab reference for the module's ContentItems
+            var contentController = Util.GetContentController();
+            var contentItems = contentController.GetContentItemsByModuleId(moduleId);
+            if (contentItems != null)
+            {
+                foreach (var item in contentItems)
+                {
+                    if (item.TabID != toTabId)
+                    {
+                        item.TabID = toTabId;
+                        contentController.UpdateContentItem(item);
+                    }
+                }
+            }
 
             //Update Module Order for source tab, also updates the tabmodule version guid
             UpdateTabModuleOrder(fromTabId);

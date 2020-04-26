@@ -12,7 +12,7 @@
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
     <OutputType>Library</OutputType>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <RootNamespace>DotNetNuke</RootNamespace>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -43,7 +43,7 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <NoWarn>1591, 3001, 3002, 1574, 1573</NoWarn>
-    <LangVersion>6</LangVersion>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\</OutputPath>
@@ -57,7 +57,7 @@
     <Optimize>true</Optimize>
     <DefineConstants>
     </DefineConstants>
-    <LangVersion>6</LangVersion>
+    <LangVersion>7</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>
@@ -73,9 +73,8 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
-    <Reference Include="ClientDependency.Core">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Components\ClientDependency\Source\bin\ClientDependency.Core.dll</HintPath>
+    <Reference Include="ClientDependency.Core, Version=1.9.2.7, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Dnn.ClientDependency.1.9.2.7\lib\net45\ClientDependency.Core.dll</HintPath>
     </Reference>
     <Reference Include="CountryListBox">
       <SpecificVersion>False</SpecificVersion>
@@ -121,6 +120,15 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.2.1.1\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=2.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.2.1.1\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing, Version=3.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.FileSystemGlobbing.3.1.1\lib\netstandard2.0\Microsoft.Extensions.FileSystemGlobbing.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.Web.Infrastructure">
       <HintPath>..\..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
@@ -131,9 +139,8 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="PetaPoco">
-      <HintPath>..\Components\PetaPoco\bin\PetaPoco.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="PetaPoco, Version=6.0.415.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\PetaPoco.Compiled.6.0.415\lib\net45\PetaPoco.dll</HintPath>
     </Reference>
     <Reference Include="SchwabenCode.QuickIO">
       <HintPath>..\..\packages\QuickIO.NET.2.6.2.0\lib\net40\SchwabenCode.QuickIO.dll</HintPath>
@@ -185,12 +192,19 @@
     <Compile Include="Application\Application.cs" />
     <Compile Include="Application\AssemblyStatusAttribute.cs" />
     <Compile Include="Application\DotNetNukeContext.cs" />
+    <Compile Include="Common\Extensions\HttpContextDependencyInjectionExtensions.cs" />
+    <Compile Include="Common\NavigationManager.cs" />
     <Compile Include="Common\Utilities\CryptographyUtils.cs" />
+    <Compile Include="Common\Utilities\FileSystemExtensions.cs" />
     <Compile Include="Common\Utilities\RegexUtils.cs" />
+    <Compile Include="Common\Utilities\ValidationUtils.cs" />
     <Compile Include="Data\ControllerBase.cs" />
+    <Compile Include="Data\DatabaseConnectionProvider.cs" />
     <Compile Include="Data\PetaPoco\FluentColumnMap.cs" />
     <Compile Include="Data\PetaPoco\FluentMapper.cs" />
     <Compile Include="Data\PetaPoco\FluentMapperExtensions.cs" />
+    <Compile Include="Data\SqlDatabaseConnectionProvider.cs" />
+    <Compile Include="Entities\Content\Taxonomy\TermHelper.cs" />
     <Compile Include="Entities\Modules\ICustomTokenProvider.cs" />
     <Compile Include="Entities\Modules\InstalledModuleInfo.cs" />
     <Compile Include="Entities\Modules\InstalledModulesController.cs" />
@@ -231,6 +245,7 @@
     <Compile Include="Entities\Users\IFriendshipEventHandlers.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Entities\Users\UserRegistrationEmailNotifier.cs" />
     <Compile Include="Obsolete\PortalSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Collections\CollectionExtensions.cs" />
@@ -692,6 +707,7 @@
     <Compile Include="Services\Cryptography\CryptographyProvider.cs" />
     <Compile Include="Services\Cryptography\ICryptographyProvider.cs" />
     <Compile Include="Services\Authentication\UserAuthenticationInfo.cs" />
+    <Compile Include="Services\DependencyInjection\IScopeAccessor.cs" />
     <Compile Include="Services\Exceptions\ExceptionExtensions.cs" />
     <Compile Include="Services\Exceptions\SearchIndexEmptyException.cs" />
     <Compile Include="Services\Assets\AssetManager.cs" />
@@ -707,6 +723,8 @@
     <Compile Include="Services\FileSystem\EventArgs\FolderMovedEventArgs.cs" />
     <Compile Include="Services\FileSystem\Exceptions\FileLockedException.cs" />
     <Compile Include="Services\FileSystem\Exceptions\InvalidFileContentException.cs" />
+    <Compile Include="Services\FileSystem\Exceptions\InvalidFolderPathException.cs" />
+    <Compile Include="Services\FileSystem\Exceptions\InvalidFilenameException.cs" />
     <Compile Include="Services\FileSystem\Exceptions\InvalidMetadataValuesException.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -1489,8 +1507,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Services\UserProfile\UserProfilePicHandler.cs" />
+    <Compile Include="Services\UserRequest\IPAddressFamily.cs" />
     <Compile Include="Services\UserRequest\IUserRequestIPAddressController.cs" />
     <Compile Include="Services\UserRequest\UserRequestIPAddressController.cs" />
+    <Compile Include="Services\Users\PurgeDeletedUsers.cs" />
+    <Compile Include="Services\Zip\SharpZipLibRedirect.cs" />
+    <Compile Include="Startup.cs" />
     <Compile Include="UI\Containers\ActionBase.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
@@ -1514,6 +1536,7 @@
     </Compile>
     <Compile Include="UI\ControlUtilities.cs" />
     <Compile Include="UI\FavIcon.cs" />
+    <Compile Include="UI\Modules\BaseModuleControlFactory.cs" />
     <Compile Include="UI\Modules\CachedModuleControl.cs" />
     <Compile Include="UI\Modules\Html5\Html5HostControl.cs">
       <SubType>Code</SubType>
@@ -1528,6 +1551,7 @@
     <Compile Include="UI\Modules\Html5\RequestPropertyAccess.cs" />
     <Compile Include="UI\Modules\IModuleControl.cs" />
     <Compile Include="UI\Modules\IModuleControlFactory.cs" />
+    <Compile Include="UI\Modules\IModuleControlPipeline.cs" />
     <Compile Include="UI\Modules\IModuleInjectionFilter.cs" />
     <Compile Include="UI\Modules\ISettingsControl.cs" />
     <Compile Include="UI\Modules\ModuleCachingType.cs" />
@@ -1720,7 +1744,7 @@
     <Compile Include="UI\WebControls\PropertyEditor\SettingsEditorControl.cs" />
     <Compile Include="UI\WebControls\PropertyEditor\VisibilityControl.cs" />
     <Compile Include="WebControls\WebControlBase.cs" />
-    <None Include="Module.build">
+    <None Include="Library.build">
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
@@ -1823,6 +1847,14 @@
       <Project>{ca056730-5759-41f8-a6c1-420f9c0c63e7}</Project>
       <Name>CountryListBox</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DotNetNuke.Abstractions\DotNetNuke.Abstractions.csproj">
+      <Project>{6928a9b1-f88a-4581-a132-d3eb38669bb0}</Project>
+      <Name>DotNetNuke.Abstractions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DotNetNuke.DependencyInjection\DotNetNuke.DependencyInjection.csproj">
+      <Project>{0fca217a-5f9a-4f5b-a31b-86d64ae65198}</Project>
+      <Name>DotNetNuke.DependencyInjection</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DotNetNuke.Instrumentation\DotNetNuke.Instrumentation.csproj">
       <Project>{ddf18e36-41a0-4ca7-a098-78ca6e6f41c1}</Project>
       <Name>DotNetNuke.Instrumentation</Name>
@@ -1840,12 +1872,15 @@
       <Name>DotNetNuke.WebUtility</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="Module.build" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  <PropertyGroup>
+    <RootDirectory>$(MSBuildProjectDirectory)\..\..</RootDirectory>
+  </PropertyGroup>
+  <Import Project="..\..\DNN_Platform.build" />
+  <Target Name="AfterBuild" DependsOnTargets="CopyBin">
+  </Target>
+  <Target Name="CopyBin">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\bin\DotNetNuke.dll" DestinationFolder="$(WebsitePath)\bin" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\bin\DotNetNuke.pdb" DestinationFolder="$(WebsitePath)\bin" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\bin\DotNetNuke.xml" DestinationFolder="$(WebsitePath)\bin" />
   </Target>
 </Project>

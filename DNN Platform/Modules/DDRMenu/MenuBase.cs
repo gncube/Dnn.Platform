@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -190,29 +194,28 @@ namespace DotNetNuke.Web.DDRMenu
                                 n =>
                                 {
                                     var tab = tc.GetTab(n.TabId, Null.NullInteger, false);
-                                    return (tab.Terms.Any(x => x.Name.ToLower() == tagName));
+                                    return (tab.Terms.Any(x => x.Name.ToLowerInvariant() == tagName));
                                 }));
 			        }
 
 			    }
 				else
 				{
-					var nodeText2 = nodeText;
-					filteredNodes.AddRange(
-						RootNode.Children.FindAll(
-							n =>
-							{
-								var nodeName = n.Text.ToLowerInvariant();
-								var nodeId = n.TabId.ToString();
-								return (nodeText2 == nodeName || nodeText2 == nodeId);
-							}));
+                    filteredNodes.Add(RootNode.FindByNameOrId(nodeText));
 				}
 			}
 
             // if filtered for foksonomy tags, use flat tree to get all related pages in nodeselection
 		    if (flattenedNodes.HasChildren())
 		        RootNode = flattenedNodes;
-			RootNode.Children.RemoveAll(n => filteredNodes.Contains(n) == exclude);
+            if (exclude)
+            {
+                RootNode.RemoveAll(filteredNodes);
+            }
+            else
+            {
+                RootNode.Children.RemoveAll(n => filteredNodes.Contains(n) == exclude);
+            }
 		}
 
         private void FilterHiddenNodes(MenuNode parentNode)

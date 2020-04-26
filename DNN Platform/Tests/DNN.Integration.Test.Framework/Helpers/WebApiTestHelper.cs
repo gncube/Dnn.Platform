@@ -1,7 +1,7 @@
-﻿// DotNetNuke® - http://www.dnnsoftware.com
-// Copyright (c) 2002-2018, DNN Corp.
-// All Rights Reserved
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -162,7 +162,7 @@ WHERE tm.TabID = {tabId} AND md.FriendlyName = '{moduleName}'");
                 foreach (var b in hashedByteArray)
                 {
                     //append it to our StringBuilder
-                    stringBuilder.Append(b.ToString("x2").ToLower());
+                    stringBuilder.Append(b.ToString("x2").ToLowerInvariant());
                 }
 
                 //return the hashed value
@@ -262,7 +262,6 @@ WHERE tm.TabID = {tabId} AND md.FriendlyName = '{moduleName}'");
 
         public static int GetPortalFromUrl(string url)
         {
-            //TODO
             return 0;
         }
 

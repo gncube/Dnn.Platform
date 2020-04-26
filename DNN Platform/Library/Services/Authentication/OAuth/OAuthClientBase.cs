@@ -1,24 +1,7 @@
-﻿#region Copyright
-
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-
 //Based on the work of:
 
 // Base oAuth Class for Twitter and LinkedIn
@@ -32,9 +15,6 @@
 // Additional modifications by Evan Smith (DNN-4143 & DNN-6265)
 // Author Url: http://skydnn.com
 
-
-#endregion
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -46,6 +26,7 @@ using System.Text;
 using System.Web;
 using DotNetNuke.Common;
 using DotNetNuke.Common.Utilities;
+using DotNetNuke.Data;
 using DotNetNuke.Entities.Users;
 using DotNetNuke.Security.Membership;
 using DotNetNuke.Instrumentation;
@@ -134,7 +115,7 @@ namespace DotNetNuke.Services.Authentication.OAuth
 
         //oAuth 1 and 2
         protected Uri AuthorizationEndpoint { get; set; }
-        protected string AuthToken { get; private set; }
+        protected string AuthToken { get; set; }
         protected TimeSpan AuthTokenExpiry { get; set; }
         protected Uri MeGraphEndpoint { get; set; }
         protected Uri TokenEndpoint { get; set; }
@@ -159,6 +140,16 @@ namespace DotNetNuke.Services.Authentication.OAuth
         public Uri CallbackUri { get; set; }
         public string Service { get; set; }
 
+        public virtual bool PrefixServiceToUserName
+        {
+            get { return true; }
+        }
+
+        public virtual bool AutoMatchExistingUsers
+        {
+            get { return false; }
+        }
+
         #endregion
 
         #region Private Methods
@@ -173,7 +164,7 @@ namespace DotNetNuke.Services.Authentication.OAuth
 
                     string response = RequestToken();
 
-                    if (response.Length > 0)
+                    if (!string.IsNullOrWhiteSpace(response))
                     {
                         //response contains token and token secret. We only need the token.
                         NameValueCollection qs = HttpUtility.ParseQueryString(response);
@@ -230,7 +221,7 @@ namespace DotNetNuke.Services.Authentication.OAuth
                                             new QueryParameter("response_type", "code")
                                         };
 
-                HttpContext.Current.Response.Redirect(AuthorizationEndpoint + "?" + parameters.ToNormalizedString(), true);
+                HttpContext.Current.Response.Redirect(AuthorizationEndpoint + "?" + parameters.ToNormalizedString(), false);
                 return AuthorisationResult.RequestingCode;
             }
 
@@ -618,18 +609,36 @@ namespace DotNetNuke.Services.Authentication.OAuth
         {
             var loginStatus = UserLoginStatus.LOGIN_FAILURE;
 
-            string userName = Service + "-" + user.Id;
+            string userName = PrefixServiceToUserName ? Service + "-" + user.Id : user.Id;
+            string token = Service + "-" + user.Id;
 
-            var objUserInfo = UserController.ValidateUser(settings.PortalId, userName, "",
-                                                                Service, "",
+            UserInfo objUserInfo;
+
+            if (AutoMatchExistingUsers)
+            {
+                objUserInfo = MembershipProvider.Instance().GetUserByUserName(settings.PortalId, userName);
+                if (objUserInfo != null)
+                {
+                    //user already exists... lets check for a token next... 
+                    var dnnAuthToken = MembershipProvider.Instance().GetUserByAuthToken(settings.PortalId, token, Service);
+                    if (dnnAuthToken == null)
+                    {
+                        DataProvider.Instance().AddUserAuthentication(objUserInfo.UserID, Service, token, objUserInfo.UserID);
+                    }
+                }
+            }
+
+            objUserInfo = UserController.ValidateUser(settings.PortalId, userName, "",
+                                                                Service, token,
                                                                 settings.PortalName, IPAddress,
                                                                 ref loginStatus);
 
 
             //Raise UserAuthenticated Event
-            var eventArgs = new UserAuthenticatedEventArgs(objUserInfo, userName, loginStatus, Service)
+            var eventArgs = new UserAuthenticatedEventArgs(objUserInfo, token, loginStatus, Service)
                                             {
-                                                AutoRegister = true
+                                                AutoRegister = true,
+                                                UserName = userName,
                                             };
 
             var profileProperties = new NameValueCollection();

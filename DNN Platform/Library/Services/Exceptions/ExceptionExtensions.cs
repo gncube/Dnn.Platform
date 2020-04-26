@@ -1,4 +1,8 @@
-﻿using System;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -23,9 +27,9 @@ namespace DotNetNuke.Services.Exceptions
             }
 
             // DNN-8845: using a FIPS compliant HashAlgorithm
-            using (var hasher = new HMACSHA1())
+            using (var hasher = new SHA1CryptoServiceProvider())
             {
-                var byteArray = hasher.ComputeHash(Encoding.Unicode.GetBytes(sb.ToString().ToLower()));
+                var byteArray = hasher.ComputeHash(Encoding.Unicode.GetBytes(sb.ToString().ToLowerInvariant()));
                 return Convert.ToBase64String(byteArray);
             }
         }

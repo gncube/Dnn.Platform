@@ -6,9 +6,9 @@
       <dependencies/>
       <owner>
         <name>DNN</name>
-        <organization>DNN Corp.</organization>
-        <url>http://www.dnnsoftware.com</url>
-        <email>support@dnnsoftware.com</email>
+        <organization>.NET Foundation</organization>
+        <url>https://dnncommunity.org</url>
+        <email>info@dnncommunity.org</email>
       </owner>
       <license>License.txt</license>
       <releaseNotes>
@@ -23,25 +23,6 @@
               <version>10.0.3</version>
             </assembly>
           </assemblies>
-        </component>
-        <component type="Config">
-          <config>
-            <configFile>web.config</configFile>
-            <install>
-              <configuration>
-                <nodes>
-                  <node path="/configuration/runtime/ab:assemblyBinding/ab:dependentAssembly[ab:assemblyIdentity/@name='Newtonsoft.Json']" action="update" targetpath="/configuration/runtime/ab:assemblyBinding/ab:dependentAssembly[ab:assemblyIdentity/@name='Newtonsoft.Json']/ab:bindingRedirect" collision="save"  nameSpace="urn:schemas-microsoft-com:asm.v1" nameSpacePrefix="ab">
-                    <bindingRedirect oldVersion="0.0.0.0-32767.32767.32767.32767" newVersion="10.0.0.0" />
-                  </node>
-                </nodes>
-              </configuration>
-            </install>
-            <uninstall>
-              <configuration>
-                <nodes />
-              </configuration>
-            </uninstall>
-          </config>
         </component>
       </components>
     </package>

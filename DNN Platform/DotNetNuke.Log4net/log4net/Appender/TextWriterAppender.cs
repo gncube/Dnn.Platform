@@ -1,3 +1,7 @@
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
 #region Apache License
 //
 // Licensed to the Apache Software Foundation (ASF) under one or more 
@@ -70,7 +74,7 @@ namespace log4net.Appender
 		/// Obsolete constructor.
 		/// </para>
 		/// </remarks>
-		[Obsolete("Instead use the default constructor and set the Layout & Writer properties")]
+		[Obsolete("Instead use the default constructor and set the Layout & Writer properties. Scheduled removal in v10.0.0.")]
 		public TextWriterAppender(ILayout layout, Stream os) : this(layout, new StreamWriter(os))
 		{
 		}
@@ -89,7 +93,7 @@ namespace log4net.Appender
 		/// Obsolete constructor.
 		/// </para>
 		/// </remarks>
-		[Obsolete("Instead use the default constructor and set the Layout & Writer properties")]
+		[Obsolete("Instead use the default constructor and set the Layout & Writer properties. Scheduled removal in v10.0.0.")]
 		public TextWriterAppender(ILayout layout, TextWriter writer) 
 		{
 			Layout = layout;

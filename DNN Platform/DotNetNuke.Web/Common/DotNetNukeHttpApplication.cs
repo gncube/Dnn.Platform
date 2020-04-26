@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -51,6 +35,7 @@ using DotNetNuke.Services.Url.FriendlyUrl;
 using DotNetNuke.Instrumentation;
 using DotNetNuke.Security.Cookies;
 using DotNetNuke.Services.Installer.Blocker;
+using DotNetNuke.HttpModules.DependencyInjection;
 
 #endregion
 
@@ -82,8 +67,14 @@ namespace DotNetNuke.Web.Common.Internal
             var name = Config.GetSetting("ServerName");
             Globals.ServerName = String.IsNullOrEmpty(name) ? Dns.GetHostName() : name;
 
+            Globals.DependencyProvider = new LazyServiceProvider();
+            var startup = new Startup();
+            (Globals.DependencyProvider as LazyServiceProvider).SetProvider(startup.DependencyProvider);
+            ServiceRequestScopeModule.SetServiceProvider(Globals.DependencyProvider);
+
             ComponentFactory.Container = new SimpleContainer();
 
+            ComponentFactory.InstallComponents(new ProviderInstaller("databaseConnection", typeof(DatabaseConnectionProvider), typeof(SqlDatabaseConnectionProvider)));
             ComponentFactory.InstallComponents(new ProviderInstaller("data", typeof(DataProvider), typeof(SqlDataProvider)));
             ComponentFactory.InstallComponents(new ProviderInstaller("caching", typeof(CachingProvider), typeof(FBCachingProvider)));
             ComponentFactory.InstallComponents(new ProviderInstaller("logging", typeof(LoggingProvider), typeof(DBLoggingProvider)));
@@ -113,6 +104,9 @@ namespace DotNetNuke.Web.Common.Internal
 
             Logger.InfoFormat("Application Started ({0})", Globals.ElapsedSinceAppStart); // just to start the timer
             DotNetNukeShutdownOverload.InitializeFcnSettings();
+
+            // register the assembly-lookup to correct the breaking rename in DNN 9.2
+            DotNetNuke.Services.Zip.SharpZipLibRedirect.RegisterSharpZipLibRedirect();
             //DotNetNukeSecurity.Initialize();
         }
         
@@ -199,7 +193,7 @@ namespace DotNetNuke.Web.Common.Internal
                 }
             }
 
-            var requestUrl = app.Request.Url.LocalPath.ToLower();
+            var requestUrl = app.Request.Url.LocalPath.ToLowerInvariant();
             if (!requestUrl.EndsWith(".aspx") && !requestUrl.EndsWith("/") &&  Endings.Any(requestUrl.EndsWith))
             {
                 return;
@@ -230,7 +224,7 @@ namespace DotNetNuke.Web.Common.Internal
 
         private static bool IsInstallOrUpgradeRequest(HttpRequest request)
         {
-            var url = request.Url.LocalPath.ToLower();
+            var url = request.Url.LocalPath.ToLowerInvariant();
 
             return url.EndsWith("webresource.axd")
                    || url.EndsWith("scriptresource.axd")

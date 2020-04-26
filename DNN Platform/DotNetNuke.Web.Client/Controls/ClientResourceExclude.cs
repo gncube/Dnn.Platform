@@ -1,4 +1,8 @@
-﻿using System;
+﻿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
+// 
+using System;
 using System.Web.UI;
 using ClientDependency.Core;
 using ClientDependency.Core.Controls;
@@ -16,7 +20,7 @@ namespace DotNetNuke.Web.Client.Controls
         {
             base.OnPreRender(e);
             var loader = Page.FindControl("ClientResourceIncludes");
-            Name = Name.ToLower();
+            Name = Name.ToLowerInvariant();
 
             if (loader != null)
             {
@@ -25,7 +29,7 @@ namespace DotNetNuke.Web.Client.Controls
                 {
                     foreach (ClientDependencyInclude ctl in loader.Controls)
                     {
-                        if (ctl.Name.ToLower() == Name && ctl.DependencyType == DependencyType)
+                        if (ctl.Name.ToLowerInvariant() == Name && ctl.DependencyType == DependencyType)
                         {
                             ctlToRemove = ctl;
                             break;

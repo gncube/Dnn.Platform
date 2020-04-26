@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -154,7 +138,7 @@ namespace DotNetNuke.UI.Skins
                 //If the control is already in the hash table
                 if (m_ControlList.ContainsKey(Token))
                 {
-                    Message += SkinController.FormatMessage(string.Format(DUPLICATE_ERROR, objSkinControl.ControlKey.ToUpper()),
+                    Message += SkinController.FormatMessage(string.Format(DUPLICATE_ERROR, Token),
                                                             string.Format(DUPLICATE_DETAIL, m_ControlList[Token], objSkinControl.ControlSrc),
                                                             2,
                                                             true);
@@ -162,7 +146,7 @@ namespace DotNetNuke.UI.Skins
                 else
                 {
                     //Add it
-                    Message += SkinController.FormatMessage(string.Format(LOAD_SKIN_TOKEN, objSkinControl.ControlKey.ToUpper()), objSkinControl.ControlSrc, 2, false);
+                    Message += SkinController.FormatMessage(string.Format(LOAD_SKIN_TOKEN, Token), objSkinControl.ControlSrc, 2, false);
                     m_ControlList.Add(Token, objSkinControl.ControlSrc);
                 }
             }
@@ -556,7 +540,7 @@ namespace DotNetNuke.UI.Skins
                     }
                     else
                     {
-                        if (SkinControl.ToLower().IndexOf("id=") == -1)
+                        if (SkinControl.IndexOf("id=", StringComparison.InvariantCultureIgnoreCase) == -1)
                         {
                             SkinControl = " id=\"ContentPane\"";
                         }
@@ -761,7 +745,7 @@ namespace DotNetNuke.UI.Skins
                         Attribute = strAttribute.Split('=');
                         AttributeName = Attribute[0].Trim();
                         AttributeValue = Attribute[1].Trim().Replace("\"", "");
-                        switch (AttributeName.ToLower())
+                        switch (AttributeName.ToLowerInvariant())
                         {
                             case "id":
                                 ControlName = AttributeValue;
@@ -777,7 +761,7 @@ namespace DotNetNuke.UI.Skins
                 }
 
                 //process skin object
-                if (AttributeNode.ToLower() == "dotnetnuke/server")
+                if (AttributeNode.Equals("dotnetnuke/server", StringComparison.InvariantCultureIgnoreCase))
                 {
                     //we have a valid skin object specification
                     Messages += SkinController.FormatMessage(OBJECT_PROC, Token, 2, false);
@@ -1041,7 +1025,7 @@ namespace DotNetNuke.UI.Skins
                 string strNewTag = strOldTag;
 
                 //we do not want to process object tags to DotNetNuke widgets
-                if (!m.Groups[0].Value.ToLower().Contains("codetype=\"dotnetnuke/client\""))
+                if (!m.Groups[0].Value.ToLowerInvariant().Contains("codetype=\"dotnetnuke/client\""))
                 {
                     switch (ParseOption)
                     {
@@ -1055,7 +1039,7 @@ namespace DotNetNuke.UI.Skins
                             break;
                         case SkinParser.Portable:
                             //if the tag does not contain a reference to the skinpath
-                            if (strNewTag.ToLower().IndexOf("<%= skinpath %>") == -1)
+                            if (strNewTag.IndexOf("<%= skinpath %>", StringComparison.InvariantCultureIgnoreCase) == -1)
                             {
                                 //insert the skinpath 
                                 strNewTag = m.Groups["tag"].Value + "<%= SkinPath %>" + m.Groups["content"].Value + m.Groups["endtag"].Value;

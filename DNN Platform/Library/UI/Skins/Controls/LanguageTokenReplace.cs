@@ -1,28 +1,13 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
 using System.Collections.Specialized;
 using System.Globalization;
+using System.IO;
 using System.Web;
 
 using DotNetNuke.Common;
@@ -56,6 +41,8 @@ namespace DotNetNuke.UI.Skins.Controls
 
     public class LanguagePropertyAccess : IPropertyAccess
     {
+        private const string FlagIconPhysicalLocation = @"~\images\Flags";
+        private const string NonExistingFlagIconFileName = "none.gif";
         private readonly PortalSettings objPortal;
         public LanguageTokenReplace objParent;
 
@@ -74,7 +61,8 @@ namespace DotNetNuke.UI.Skins.Controls
                 case "url":
                     return NewUrl(objParent.Language);
                 case "flagsrc":
-                    return "/" + objParent.Language + ".gif";
+                    var mappedGifFile = PathUtils.Instance.MapPath($@"{FlagIconPhysicalLocation}\{objParent.Language}.gif");
+                    return File.Exists(mappedGifFile) ? $"/{objParent.Language}.gif" : $@"/{NonExistingFlagIconFileName}";
                 case "selected":
                     return (objParent.Language == CultureInfo.CurrentCulture.Name).ToString();
                 case "label":
@@ -215,7 +203,7 @@ namespace DotNetNuke.UI.Skins.Controls
                 {
                     returnValue += "&";
                 }
-                returnValue += "language=" + newLanguage.ToLower();
+                returnValue += "language=" + newLanguage.ToLowerInvariant();
             }
 
             //return the new querystring as a string array
@@ -229,7 +217,6 @@ namespace DotNetNuke.UI.Skins.Controls
         /// <param name="newLanguage"></param>
         private string NewUrl(string newLanguage)
         {
-            var objSecurity = PortalSecurity.Instance;
             var newLocale = LocaleController.Instance.GetLocale(newLanguage);
 
             //Ensure that the current ActiveTab is the culture of the new language
@@ -269,7 +256,7 @@ namespace DotNetNuke.UI.Skins.Controls
                     }
                     if (!string.IsNullOrEmpty(fullurl))
                     {
-                        return objSecurity.InputFilter(fullurl, PortalSecurity.FilterFlag.NoScripting);
+                        return GetCleanUrl(fullurl);
                     }
                 }
             }
@@ -287,11 +274,23 @@ namespace DotNetNuke.UI.Skins.Controls
                 if (queryString.Length > 0) rawQueryString = string.Concat("?", queryString);
             }
 
-            return
-                objSecurity.InputFilter(
-                    TestableGlobals.Instance.NavigateURL(tabId, objPortal.ActiveTab.IsSuperTab, objPortal, HttpContext.Current.Request.QueryString["ctl"], newLanguage, GetQsParams(newLocale.Code, islocalized)) +
-                    rawQueryString,
-                    PortalSecurity.FilterFlag.NoScripting);
+            var controlKey = HttpContext.Current.Request.QueryString["ctl"];
+            var queryStrings = GetQsParams(newLocale.Code, islocalized);
+            var isSuperTab = objPortal.ActiveTab.IsSuperTab;
+            var url = $"{TestableGlobals.Instance.NavigateURL(tabId, isSuperTab, objPortal, controlKey, newLanguage, queryStrings)}{rawQueryString}";
+
+            return GetCleanUrl(url);
+        }
+
+        private string GetCleanUrl(string url)
+        {
+            var cleanUrl = PortalSecurity.Instance.InputFilter(url, PortalSecurity.FilterFlag.NoScripting);
+            if (url != cleanUrl)
+            {
+                return string.Empty;
+            }
+
+            return url;
         }
 
         #endregion

@@ -1,23 +1,7 @@
-#region Copyright
+ï»¿// 
+// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the MIT License. See LICENSE file in the project root for full license information.
 // 
-// DotNetNuke® - http://www.dotnetnuke.com
-// Copyright (c) 2002-2018
-// by DotNetNuke Corporation
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and 
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions 
-// of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED 
-// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-// DEALINGS IN THE SOFTWARE.
-#endregion
 #region Usings
 
 using System;
@@ -44,6 +28,8 @@ namespace DotNetNuke.Entities.Users
     /// <remarks>
     /// </remarks>
     /// -----------------------------------------------------------------------------
+
+    [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
     public class UserOnlineController
     {
     	private static readonly ILog Logger = LoggerSource.Instance.GetLogger(typeof (UserOnlineController));
@@ -56,6 +42,7 @@ namespace DotNetNuke.Entities.Users
         /// Clears the cached Users Online Information
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public void ClearUserList()
         {
             string key = "OnlineUserList";
@@ -67,6 +54,7 @@ namespace DotNetNuke.Entities.Users
         /// Gets the Online time window
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public int GetOnlineTimeWindow()
         {
             return Host.Host.UsersOnlineTimeWindow;
@@ -77,6 +65,7 @@ namespace DotNetNuke.Entities.Users
         /// Gets the cached Users Online Information
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public Hashtable GetUserList()
         {
             var userList = (Hashtable)DataCache.GetCache(CacheKey);
@@ -100,6 +89,7 @@ namespace DotNetNuke.Entities.Users
         /// Gets whether the Users Online functionality is enabled
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public bool IsEnabled()
         {
             return Host.Host.EnableUsersOnline;
@@ -110,6 +100,7 @@ namespace DotNetNuke.Entities.Users
         /// Determines whether a User is online
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public bool IsUserOnline(UserInfo user)
         {
             bool isOnline = false;
@@ -125,6 +116,7 @@ namespace DotNetNuke.Entities.Users
         /// Sets the cached Users Online Information
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public void SetUserList(Hashtable userList)
         {
             DataCache.SetCache(CacheKey, userList);
@@ -136,6 +128,7 @@ namespace DotNetNuke.Entities.Users
         /// </summary>
         /// <param name="context">An HttpContext Object</param>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         private void TrackAnonymousUser(HttpContext context)
         {
             string cookieName = "DotNetNukeAnonymous";
@@ -223,6 +216,7 @@ namespace DotNetNuke.Entities.Users
         /// </summary>
         /// <param name="context">An HttpContext Object</param>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         private void TrackAuthenticatedUser(HttpContext context)
         {
             //Retrieve Portal Settings
@@ -259,6 +253,7 @@ namespace DotNetNuke.Entities.Users
         /// Tracks an online User
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public void TrackUsers()
         {
             HttpContext context = HttpContext.Current;
@@ -287,6 +282,7 @@ namespace DotNetNuke.Entities.Users
         /// Update the Users Online information
         /// </summary>
         /// -----------------------------------------------------------------------------
+        [Obsolete("Support for users online was removed in 8.x, other solutions exist outside of the DNN Platform.  Scheduled removal in v11.0.0.")]
         public void UpdateUsersOnline()
         {
             //Get a Current User List
